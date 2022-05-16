@@ -12,7 +12,7 @@ import java.net.URL;
 public class RobinHoodApplication extends Application {
     @Override
     public void start(Stage stage) throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader(RobinHoodApplication.class.getResource("login-view.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(RobinHoodApplication.class.getResource("invoice-view.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 1920, 1080);
         stage.setTitle("RobinHood Clinic");
         //resize icon because that didn't work

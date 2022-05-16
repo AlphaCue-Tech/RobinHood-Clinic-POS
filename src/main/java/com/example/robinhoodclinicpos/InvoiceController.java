@@ -6,9 +6,25 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.util.Callback;
+import org.bytedeco.javacv.*;
+
+import org.bytedeco.javacv.FFmpegFrameGrabber;
+import org.bytedeco.javacv.Frame;
+import org.bytedeco.javacv.FrameGrabber;
+import org.bytedeco.javacv.OpenCVFrameConverter;
+import org.bytedeco.opencv.opencv_core.IplImage;
+
+import javax.swing.*;
+
+import java.awt.event.WindowEvent;
+
+import static org.bytedeco.opencv.helper.opencv_imgcodecs.cvSaveImage;
+//import org.bytedeco.javacv.*;
 
 class CustomCell extends ListCell<String> {
     private Button actionBtn;
@@ -62,8 +78,27 @@ public class InvoiceController {
     @FXML
     private ListView<String> itemListView;
 
+    @FXML
+    private ImageView webcamPhoto;
     private ObservableList<String> observableList = FXCollections.observableArrayList();
 
+    @FXML
+    protected void onTakePhotoButtonPressed(){
+        try {
+            FrameGrabber grabber = new OpenCVFrameGrabber(0);
+            OpenCVFrameConverter.ToIplImage converter = new OpenCVFrameConverter.ToIplImage();
+            grabber.start();
+            Frame frame = grabber.grab();
+            IplImage img = converter.convert(frame);
+            cvSaveImage("src/main/resources/com/example/robinhoodclinicpos/images/selfie.png", img);
+            Thread.sleep(5000);
+            webcamPhoto.setImage(new Image(getClass().getResourceAsStream("images/selfie.png")));
+        } catch(Exception e){
+            System.out.println(e);
+            System.out.println("Encountered an error while taking webcam photo");
+        }
+//            FrameGrabber grabber;
+    }
     public void initialize(){
         for(int i=0; i<100; i++) {
             observableList.add("Item no. "+Integer.toString(i));
