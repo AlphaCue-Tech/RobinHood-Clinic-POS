@@ -39,6 +39,7 @@ class CustomCell extends ListCell<String> {
     private Label name ;
     private GridPane pane ;
     private TextField amt;
+
     public CustomCell() {
         super();
 
@@ -142,17 +143,114 @@ public class InvoiceController {
     @FXML
     private TextField itemCount;
     @FXML
+    private CheckBox cashCheckBox;
+    @FXML
+    CheckBox bKashCheckBox;
+    @FXML
+    private CheckBox nogodCheckBox;
+    @FXML
+    private CheckBox cardCheckBox;
+    @FXML
+    private CheckBox otherCheckBox;
+    @FXML
     private Label totalBill;
     @FXML
     private ImageView webcamPhoto;
     @FXML
     private TextField searchTextField;
+    @FXML
+    private Label customerName;
     private ObservableList<String> observableList = FXCollections.observableArrayList();
     private ObservableList<String> customerItemObservableList = FXCollections.observableArrayList();
     private ArrayList<Double> costList;
     private ArrayList<String> itemName;
     private ArrayList<Double> itemCost;
+
+    private String fullName;
+    private String phoneNumber;
+    private String address;
     private Stage addCustomerStage;
+    public String getFullName(){
+        return fullName;
+    }
+    @FXML protected void cashChecked(){
+        if (cashCheckBox.isSelected()){
+            bKashCheckBox.setSelected(false);
+            nogodCheckBox.setSelected(false);
+            cardCheckBox.setSelected(false);
+            otherCheckBox.setSelected(false);
+        }
+
+    }
+    @FXML
+    protected void bKashChecked(){
+        if (bKashCheckBox.isSelected()){
+            cashCheckBox.setSelected(false);
+            nogodCheckBox.setSelected(false);
+            cardCheckBox.setSelected(false);
+            otherCheckBox.setSelected(false);
+        }
+
+    }
+    @FXML
+    protected void nogodChecked(){
+        if (nogodCheckBox.isSelected()){
+            bKashCheckBox.setSelected(false);
+            cashCheckBox.setSelected(false);
+            cardCheckBox.setSelected(false);
+            otherCheckBox.setSelected(false);
+        }
+    }
+    @FXML
+    protected void cardChecked(){
+        if (cardCheckBox.isSelected()){
+            bKashCheckBox.setSelected(false);
+            nogodCheckBox.setSelected(false);
+            cashCheckBox.setSelected(false);
+            otherCheckBox.setSelected(false);
+        }
+
+    }
+    @FXML
+    protected void otherChecked(){
+        if (otherCheckBox.isSelected()){
+            bKashCheckBox.setSelected(false);
+            nogodCheckBox.setSelected(false);
+            cardCheckBox.setSelected(false);
+            cashCheckBox.setSelected(false);
+        }
+    }
+
+    @FXML
+    protected void editCustomerButtonPressed(){
+        System.out.println("Editing a new customer");
+        try {
+            FXMLLoader loader = new FXMLLoader(RobinHoodApplication.class.getResource("addCustomer-view.fxml"));
+            addCustomerStage = new Stage();
+            addCustomerStage.setTitle("Edit Customer");
+            addCustomerStage.setScene(new Scene(loader.load(), 800, 600));
+            AddCustomerController c =  loader.getController();
+            c.setFullName(fullName);
+            c.setPhoneNumber(phoneNumber);
+            c.setAddress(address);
+            addCustomerStage.showAndWait();
+
+            TextField temp;
+            temp = (TextField) loader.getNamespace().get("fullName");
+            fullName = temp.getText();
+
+            temp = (TextField) loader.getNamespace().get("phoneNumber");
+            phoneNumber = temp.getText();
+            temp = (TextField) loader.getNamespace().get("address");
+            address = temp.getText();
+            customerName.setText(fullName);
+            // Hide this current window (if this is what you want)
+//            ((Node)(event.getSource())).getScene().getWindow().hide();
+        }
+        catch (IOException e) {
+            System.out.println(e);
+        }
+    }
 
     @FXML
     protected void addCustomerButtonPressed(){
@@ -163,7 +261,16 @@ public class InvoiceController {
             addCustomerStage = new Stage();
             addCustomerStage.setTitle("Add Customer");
             addCustomerStage.setScene(new Scene(loader.load(), 800, 600));
-            addCustomerStage.show();
+            addCustomerStage.showAndWait();
+
+            TextField temp;
+            temp = (TextField) loader.getNamespace().get("fullName");
+            fullName = temp.getText();
+            temp = (TextField) loader.getNamespace().get("phoneNumber");
+            phoneNumber = temp.getText();
+            temp = (TextField) loader.getNamespace().get("address");
+            address = temp.getText();
+            customerName.setText(fullName);
             // Hide this current window (if this is what you want)
 //            ((Node)(event.getSource())).getScene().getWindow().hide();
         }
