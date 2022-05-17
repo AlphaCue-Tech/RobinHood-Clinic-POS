@@ -15,31 +15,32 @@
 
 <GridPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="1080.0" prefWidth="1920.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.robinhoodclinicpos.InvoiceController">
     <columnConstraints>
-        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+        <ColumnConstraints hgrow="SOMETIMES" maxWidth="514.4000549316406" minWidth="10.0" prefWidth="347.8000244140625" />
+        <ColumnConstraints hgrow="SOMETIMES" maxWidth="733.5999450683594" minWidth="10.0" prefWidth="396.39997558593745" />
+        <ColumnConstraints hgrow="SOMETIMES" maxWidth="441.4000488281249" minWidth="0.0" prefWidth="108.4000244140625" />
+        <ColumnConstraints hgrow="SOMETIMES" maxWidth="632.4000000000001" minWidth="10.0" prefWidth="329.4000244140625" />
+        <ColumnConstraints hgrow="SOMETIMES" maxWidth="471.79997558593755" minWidth="10.0" prefWidth="370.1999755859374" />
+      <ColumnConstraints hgrow="SOMETIMES" maxWidth="403.0" minWidth="10.0" prefWidth="372.5999999999999" />
     </columnConstraints>
     <rowConstraints>
-        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+        <RowConstraints maxHeight="174.79999389648438" minHeight="0.0" prefHeight="107.59999389648438" vgrow="SOMETIMES" />
+        <RowConstraints maxHeight="368.8" minHeight="10.0" prefHeight="117.79998168945312" vgrow="SOMETIMES" />
+        <RowConstraints maxHeight="707.2000213623046" minHeight="10.0" prefHeight="574.4000244140625" vgrow="SOMETIMES" />
+        <RowConstraints maxHeight="341.8000732421875" minHeight="0.0" prefHeight="70.39997558593745" vgrow="SOMETIMES" />
+        <RowConstraints maxHeight="210.40004882812502" minHeight="10.0" prefHeight="210.40004882812502" vgrow="SOMETIMES" />
     </rowConstraints>
     <children>
-        <Label alignment="CENTER" contentDisplay="TOP" prefHeight="37.0" prefWidth="150.0" text="Username" textAlignment="CENTER" GridPane.halignment="CENTER" />
-        <Button alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="30.0" prefWidth="134.0" text="Logout" GridPane.columnIndex="4" GridPane.halignment="CENTER" />
-        <TextField prefHeight="30.0" prefWidth="225.0" promptText="Search" GridPane.columnIndex="1" GridPane.rowIndex="1">
+        <Label alignment="CENTER" contentDisplay="TOP" prefHeight="37.0" prefWidth="150.0" text="Username" textAlignment="CENTER" GridPane.columnIndex="2" GridPane.halignment="CENTER" />
+        <Button onAction="#logOutButtonPressed" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" prefHeight="42.0" prefWidth="149.0" text="Logout" GridPane.columnIndex="5" GridPane.halignment="CENTER" />
+        <TextField fx:id="searchTextField" onTextChange="#searchItem" prefHeight="30.0" prefWidth="225.0" promptText="Search" GridPane.columnIndex="1" GridPane.rowIndex="1">
             <padding>
                 <Insets left="10.0" right="10.0" />
             </padding>
         </TextField>
-        <Button mnemonicParsing="false" prefHeight="26.0" prefWidth="179.0" text="Add" GridPane.columnIndex="3" GridPane.halignment="CENTER" GridPane.rowIndex="1" />
-        <ListView fx:id="itemListView" prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="2" GridPane.rowSpan="2">
+        <Button onAction="#addCustomerButtonPressed" mnemonicParsing="false" prefHeight="50.0" prefWidth="158.0" text="Add Customer" GridPane.columnIndex="4" GridPane.columnSpan="2" GridPane.halignment="CENTER" GridPane.rowIndex="1" />
+        <ListView fx:id="itemListView" prefHeight="200.0" prefWidth="500.0" GridPane.columnSpan="3" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.rowSpan="2" GridPane.valignment="CENTER">
             <HBox fx:id="listBox" alignment="CENTER_LEFT">
-                <padding><Insets bottom="5" left="5" top="5" /> </padding>
+                <padding><Insets bottom="5.0" left="5.0" right="5.0" top="5.0" /> </padding>
                 <HBox alignment="CENTER_LEFT" minWidth="88" prefWidth="170">
                     <Label fx:id="surveyName" styleClass="Name" text="Field A" />
                 </HBox>
@@ -65,7 +66,7 @@
                 </HBox>
             </HBox>
          <GridPane.margin>
-            <Insets bottom="10.0" left="20.0" right="20.0" top="10.0" />
+            <Insets bottom="10.0" left="200.0" right="50.0" top="10.0" />
          </GridPane.margin>
          <padding>
             <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
@@ -73,5 +74,36 @@
         </ListView>
       <Button mnemonicParsing="false" onAction="#onTakePhotoButtonPressed" prefHeight="54.0" prefWidth="228.0" text="Take Photo" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="4" />
       <ImageView fx:id="webcamPhoto" fitHeight="179.0" fitWidth="385.0" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="4" />
+      <ListView fx:id="customerItemListView" prefHeight="563.0" prefWidth="494.0" GridPane.columnIndex="4" GridPane.columnSpan="2" GridPane.halignment="CENTER" GridPane.rowIndex="2">
+         <GridPane.margin>
+            <Insets bottom="10.0" left="70.0" right="100.0" top="10.0" />
+         </GridPane.margin>
+      </ListView>
+      <Label alignment="CENTER" contentDisplay="CENTER" prefHeight="98.0" prefWidth="252.0" text="Total BIll:" textAlignment="CENTER" GridPane.columnIndex="4" GridPane.halignment="RIGHT" GridPane.rowIndex="3" />
+      <Label fx:id="totalBill" alignment="CENTER" prefHeight="85.0" prefWidth="180.0" text="0" GridPane.columnIndex="5" GridPane.rowIndex="3">
+         <GridPane.margin>
+            <Insets left="50.0" />
+         </GridPane.margin>
+      </Label>
+      <VBox alignment="CENTER" prefHeight="200.0" prefWidth="100.0" spacing="30.0" GridPane.columnIndex="3" GridPane.rowIndex="2">
+         <children>
+            <Label alignment="CENTER" contentDisplay="CENTER" prefHeight="29.0" prefWidth="98.0" text="Quantity" />
+            <TextField fx:id="itemCount" alignment="CENTER" prefHeight="74.0" prefWidth="149.0" text="1">
+               <VBox.margin>
+                  <Insets left="50.0" right="50.0" top="10.0" />
+               </VBox.margin>
+            </TextField>
+            <Button mnemonicParsing="false" onAction="#addItemButtonPressed" prefHeight="50.0" prefWidth="176.0" text="Add Item">
+               <VBox.margin>
+                  <Insets left="50.0" right="50.0" />
+               </VBox.margin>
+            </Button>
+            <Button mnemonicParsing="false" onAction="#removeItemButtonPressed" prefHeight="50.0" prefWidth="176.0" text="Remove Item" />
+         </children>
+      </VBox>
+      <Button onAction="#generateInvoicePressed" mnemonicParsing="false" prefHeight="67.0" prefWidth="161.0" text="Generate Invoice" GridPane.columnIndex="4" GridPane.columnSpan="2" GridPane.halignment="CENTER" GridPane.rowIndex="4" />
     </children>
+   <padding>
+      <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+   </padding>
 </GridPane>
