@@ -1,12 +1,19 @@
 package com.example.robinhoodclinicpos;
 
+import com.github.sarxos.webcam.Webcam;
+import com.github.sarxos.webcam.util.ImageUtils;
+import com.google.api.core.ApiFuture;
+import com.google.cloud.firestore.Firestore;
+import com.google.cloud.firestore.QueryDocumentSnapshot;
+import com.google.cloud.firestore.QuerySnapshot;
+import com.google.firebase.cloud.FirestoreClient;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
@@ -15,24 +22,13 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 import javafx.util.Callback;
-import org.bytedeco.javacv.*;
 
-import org.bytedeco.javacv.FFmpegFrameGrabber;
-import org.bytedeco.javacv.Frame;
-import org.bytedeco.javacv.FrameGrabber;
-import org.bytedeco.javacv.OpenCVFrameConverter;
-import org.bytedeco.opencv.opencv_core.IplImage;
-import org.w3c.dom.Text;
-
-import javax.swing.*;
-
-import java.awt.event.WindowEvent;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.bytedeco.opencv.helper.opencv_imgcodecs.cvSaveImage;
-//import org.bytedeco.javacv.*;
 
 class CustomCell extends ListCell<String> {
     private Button actionBtn;
@@ -220,7 +216,33 @@ public class InvoiceController {
             cashCheckBox.setSelected(false);
         }
     }
+    @FXML
+    protected void findCustomerButtonPressed(){
+        System.out.println("Finding an old customer");
+        try {
+            FXMLLoader loader = new FXMLLoader(RobinHoodApplication.class.getResource("findCustomer-view.fxml"));
+            addCustomerStage = new Stage();
+            addCustomerStage.setTitle("Find Customer");
+            addCustomerStage.setScene(new Scene(loader.load(), 800, 600));
 
+            addCustomerStage.showAndWait();
+
+            TextField temp;
+            temp = (TextField) loader.getNamespace().get("fullName");
+            fullName = temp.getText();
+
+            temp = (TextField) loader.getNamespace().get("phoneNumber");
+            phoneNumber = temp.getText();
+            temp = (TextField) loader.getNamespace().get("address");
+            address = temp.getText();
+            customerName.setText(fullName);
+            // Hide this current window (if this is what you want)
+//            ((Node)(event.getSource())).getScene().getWindow().hide();
+        }
+        catch (IOException e) {
+            System.out.println(e);
+        }
+    }
     @FXML
     protected void editCustomerButtonPressed(){
         System.out.println("Editing a new customer");
@@ -254,6 +276,7 @@ public class InvoiceController {
 
     @FXML
     protected void addCustomerButtonPressed(){
+
         System.out.println("Adding a new customer");
         try {
             FXMLLoader loader = new FXMLLoader(RobinHoodApplication.class.getResource("addCustomer-view.fxml"));
@@ -373,24 +396,44 @@ public class InvoiceController {
     }
     @FXML
     protected void onTakePhotoButtonPressed(){
+        Webcam webcam = Webcam.getDefault();
+        webcam.open();
+        BufferedImage image = webcam.getImage();
+
         try {
-            FrameGrabber grabber = new OpenCVFrameGrabber(0);
-            OpenCVFrameConverter.ToIplImage converter = new OpenCVFrameConverter.ToIplImage();
-            grabber.start();
-            Frame frame = grabber.grab();
-            IplImage img = converter.convert(frame);
-//            cvSaveImage("src/main/resources/com/example/robinhoodclinicpos/images/selfie.png", img);
-
-            cvSaveImage("selfie.png", img);
+            ImageIO.write(image, ImageUtils.FORMAT_JPG, new File("src/main/resources/com/example/robinhoodclinicpos/images/selfie.jpg"));
             Thread.sleep(3000);
-//            webcamPhoto.setImage(new Image(getClass().getResourceAsStream("images/selfie.png")));
+            Image im = SwingFXUtils.toFXImage(image, null);
+            webcamPhoto.setImage(im);
+        } catch (Exception e) {
 
-            webcamPhoto.setImage(new Image(getClass().getResourceAsStream("../../../../selfie.png")));
-        } catch(Exception e){
+            System.out.println("Could not capture image");
             System.out.println(e);
-            System.out.println("Encountered an error while taking webcam photo");
         }
-//            FrameGrabber grabber;
+        finally {
+            //not closing the webcam makes for faster image capturing
+//            webcam.close();
+        }
+
+
+        //Takes a photo but it doesn't show up. can probably save it to the database. also there is no control for taking the photo
+//        try {
+//            FrameGrabber grabber = new OpenCVFrameGrabber(0);
+//            OpenCVFrameConverter.ToIplImage converter = new OpenCVFrameConverter.ToIplImage();
+//            grabber.start();
+//            Frame frame = grabber.grab();
+//            IplImage img = converter.convert(frame);
+////            cvSaveImage("src/main/resources/com/example/robinhoodclinicpos/images/selfie.png", img);
+//
+//            cvSaveImage("selfie.png", img);
+//            Thread.sleep(3000);
+////            webcamPhoto.setImage(new Image(getClass().getResourceAsStream("images/selfie.png")));
+//
+//            webcamPhoto.setImage(new Image(getClass().getResourceAsStream("../../../../selfie.png")));
+//        } catch(Exception e){
+//            System.out.println(e);
+//            System.out.println("Encountered an error while taking webcam photo");
+//        }
     }
     @FXML
     protected void searchItem(){
@@ -410,16 +453,45 @@ public class InvoiceController {
             System.out.println("Error searching");
         }
     }
-    public void initialize(){
+    public void initialize() throws IOException {
         itemName = new ArrayList<String>();
         itemCost = new ArrayList<Double>();
         costList = new ArrayList<Double>();
-        itemName.add("X-Ray");
-        itemCost.add(200.0);
-        itemName.add("Cat Food");
-        itemCost.add(30.0);
-        itemName.add("Dog Collar");
-        itemCost.add(500.0);
+
+//        InputStream serviceAccount = new FileInputStream("robinhood-clinic-firebase-adminsdk-yzfpk-9aedc0fc60.json");
+//        GoogleCredentials credentials = GoogleCredentials.fromStream(serviceAccount);
+//        FirebaseOptions options = new FirebaseOptions.Builder().setCredentials(credentials).build();
+//        FirebaseApp.initializeApp(options);
+        Firestore db = FirestoreClient.getFirestore();
+        // asynchronously retrieve all users
+
+        // TODO: Uncomment this (conserving api usage)
+        ApiFuture<QuerySnapshot> query = db.collection("products").get();
+
+        QuerySnapshot querySnapshot = null;
+        try {
+            querySnapshot = query.get();
+        } catch (Exception e) {
+           System.out.println("Error fetching data");
+        }
+        List<QueryDocumentSnapshot> documents = querySnapshot.getDocuments();
+        for (QueryDocumentSnapshot document : documents) {
+            String name = document.getString("name");
+            Double cost = document.getDouble("cost");
+            itemName.add(name);
+            itemCost.add(cost);
+//            System.out.println("User: " + document.getId());
+//            System.out.println("First: " + document.getString("name"));
+//            System.out.println("Middle: " + document.getDouble("cost"));
+        }
+
+// Done: remove static items and use database later
+//        itemName.add("X-Ray");
+//        itemCost.add(200.0);
+//        itemName.add("Cat Food");
+//        itemCost.add(30.0);
+//        itemName.add("Dog Collar");
+//        itemCost.add(500.0);
 
         for(int i=0; i<itemName.size(); i++) {
             observableList.add("Item "+Integer.toString(i)+": "+itemName.get(i)+" Cost: "+itemCost.get(i));

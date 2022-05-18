@@ -78,7 +78,9 @@
          </padding>
         </ListView>
       <Button mnemonicParsing="false" onAction="#onTakePhotoButtonPressed" prefHeight="54.0" prefWidth="228.0" text="Take Photo" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="4" />
-      <ImageView fx:id="webcamPhoto" fitHeight="206.0" fitWidth="385.0" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="3" GridPane.halignment="CENTER" GridPane.rowIndex="4" />
+      <ImageView fx:id="webcamPhoto" fitHeight="206.0" fitWidth="385.0" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="3" GridPane.halignment="CENTER" GridPane.rowIndex="4" >
+
+      </ImageView>
       <ListView fx:id="customerItemListView" prefHeight="563.0" prefWidth="494.0" GridPane.columnIndex="4" GridPane.columnSpan="2" GridPane.halignment="CENTER" GridPane.rowIndex="2">
          <GridPane.margin>
             <Insets bottom="10.0" left="70.0" right="100.0" top="10.0" />
@@ -97,6 +99,12 @@
                <VBox.margin>
                   <Insets left="50.0" right="50.0" top="10.0" />
                </VBox.margin>
+               <opaqueInsets>
+                  <Insets />
+               </opaqueInsets>
+               <font>
+                  <Font size="25.0" />
+               </font>
             </TextField>
             <Button mnemonicParsing="false" onAction="#addItemButtonPressed" prefHeight="50.0" prefWidth="176.0" text="Add Item">
                <VBox.margin>
@@ -109,20 +117,21 @@
       <Button mnemonicParsing="false" onAction="#generateInvoicePressed" prefHeight="67.0" prefWidth="161.0" text="Generate Invoice" GridPane.columnIndex="4" GridPane.columnSpan="2" GridPane.halignment="CENTER" GridPane.rowIndex="4" />
       <HBox alignment="CENTER" prefHeight="124.0" prefWidth="558.0" spacing="10.0" GridPane.columnIndex="2" GridPane.columnSpan="2" GridPane.rowIndex="1">
          <children>
-            <CheckBox mnemonicParsing="false" onAction="#cashChecked" prefHeight="54.0" prefWidth="62.0" text="Cash" fx:id="cashCheckBox"/>
-            <CheckBox mnemonicParsing="false" onAction="#bKashChecked" prefHeight="32.0" prefWidth="66.0" text="bKash"  fx:id="bKashCheckBox"/>
-            <CheckBox mnemonicParsing="false" onAction="#nogodChecked" prefHeight="32.0" prefWidth="67.0" text="Nogod"  fx:id="nogodCheckBox"/>
-            <CheckBox mnemonicParsing="false" onAction="#cardChecked" prefHeight="27.0" prefWidth="55.0" text="Card"  fx:id="cardCheckBox"/>
-            <CheckBox mnemonicParsing="false" onAction="#otherChecked" prefHeight="30.0" prefWidth="63.0" text="Other"  fx:id="otherCheckBox"/>
+            <CheckBox fx:id="cashCheckBox" mnemonicParsing="false" onAction="#cashChecked" prefHeight="54.0" prefWidth="62.0" text="Cash" />
+            <CheckBox fx:id="bKashCheckBox" mnemonicParsing="false" onAction="#bKashChecked" prefHeight="32.0" prefWidth="66.0" text="bKash" />
+            <CheckBox fx:id="nogodCheckBox" mnemonicParsing="false" onAction="#nogodChecked" prefHeight="32.0" prefWidth="67.0" text="Nogod" />
+            <CheckBox fx:id="cardCheckBox" mnemonicParsing="false" onAction="#cardChecked" prefHeight="27.0" prefWidth="55.0" text="Card" />
+            <CheckBox fx:id="otherCheckBox" mnemonicParsing="false" onAction="#otherChecked" prefHeight="30.0" prefWidth="63.0" text="Other" />
          </children>
          <GridPane.margin>
             <Insets left="20.0" />
          </GridPane.margin>
       </HBox>
       <HBox prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="4" />
-      <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="140.0" GridPane.columnIndex="4" GridPane.columnSpan="2" GridPane.rowIndex="1">
+      <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="30.0" GridPane.columnIndex="4" GridPane.columnSpan="2" GridPane.rowIndex="1">
          <children>
             <Button mnemonicParsing="false" onAction="#addCustomerButtonPressed" prefHeight="34.0" prefWidth="141.0" text="Add Customer" />
+            <Button mnemonicParsing="false" onAction="#findCustomerButtonPressed" prefHeight="34.0" prefWidth="141.0" text="Find Customer" />
             <Button mnemonicParsing="false" onAction="#editCustomerButtonPressed" prefHeight="36.0" prefWidth="142.0" text="Edit Customer" />
          </children>
       </HBox>

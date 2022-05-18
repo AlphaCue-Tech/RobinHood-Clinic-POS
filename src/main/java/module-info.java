@@ -9,6 +9,15 @@ module com.example.robinhoodclinicpos {
     requires org.bytedeco.javacv;
     requires java.desktop;
     requires org.bytedeco.opencv;
+    requires google.cloud.firestore;
+    requires com.google.api.client.auth;
+    requires com.google.auth.oauth2;
+    requires firebase.admin;
+    requires com.google.auth;
+    requires com.google.api.apicommon;
+    requires google.cloud.core;
+    requires webcam.capture;
+    requires javafx.swing;
 
     opens com.example.robinhoodclinicpos to javafx.fxml;
     exports com.example.robinhoodclinicpos;
