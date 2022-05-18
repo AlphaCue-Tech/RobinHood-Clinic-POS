@@ -3,11 +3,15 @@ package com.example.robinhoodclinicpos;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.Firestore;
+import com.google.cloud.storage.Bucket;
 import com.google.firebase.cloud.FirestoreClient;
+import com.google.firebase.cloud.StorageClient;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -44,6 +48,14 @@ public class AddCustomerController {
             data.put("phone", phoneNumber.getText());
             data.put("registered", System.currentTimeMillis());
             ApiFuture<DocumentReference> ref = db.collection("customers").add(data);
+
+
+            StorageClient storageClient = StorageClient.getInstance();
+            InputStream testFile = new FileInputStream("src/main/resources/com/example/robinhoodclinicpos/images/selfie.jpg");
+            String blobString = "PHOTOS_FOLDER/" + "selfie.jpg";
+
+            storageClient.bucket().create(blobString, testFile, Bucket.BlobWriteOption.userProject("robinhood-clinic"));
+
 
 //              Map map = new HashMap();
 //            map.put("timestamp", ServerValue.TIMESTAMP);

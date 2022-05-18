@@ -18,6 +18,7 @@ module com.example.robinhoodclinicpos {
     requires google.cloud.core;
     requires webcam.capture;
     requires javafx.swing;
+    requires google.cloud.storage;
 
     opens com.example.robinhoodclinicpos to javafx.fxml;
     exports com.example.robinhoodclinicpos;

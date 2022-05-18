@@ -21,7 +21,7 @@ public class RobinHoodApplication extends Application {
 
         GoogleCredentials credentials = GoogleCredentials.fromStream(serviceAccount);
 
-        FirebaseOptions options = new FirebaseOptions.Builder().setCredentials(credentials).build();
+        FirebaseOptions options = new FirebaseOptions.Builder().setCredentials(credentials).setStorageBucket("robinhood-clinic.appspot.com").build();
         FirebaseApp.initializeApp(options);
 
         FXMLLoader fxmlLoader = new FXMLLoader(RobinHoodApplication.class.getResource("invoice-view.fxml"));

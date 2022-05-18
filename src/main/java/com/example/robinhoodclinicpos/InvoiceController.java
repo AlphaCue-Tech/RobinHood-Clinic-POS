@@ -2,10 +2,7 @@ package com.example.robinhoodclinicpos;
 
 import com.github.sarxos.webcam.Webcam;
 import com.github.sarxos.webcam.util.ImageUtils;
-import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.Firestore;
-import com.google.cloud.firestore.QueryDocumentSnapshot;
-import com.google.cloud.firestore.QuerySnapshot;
 import com.google.firebase.cloud.FirestoreClient;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -15,20 +12,24 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
 class CustomCell extends ListCell<String> {
     private Button actionBtn;
@@ -156,6 +157,11 @@ public class InvoiceController {
     private TextField searchTextField;
     @FXML
     private Label customerName;
+    @FXML
+    private VBox itemCountVBox;
+
+    private String referenceNo;
+
     private ObservableList<String> observableList = FXCollections.observableArrayList();
     private ObservableList<String> customerItemObservableList = FXCollections.observableArrayList();
     private ArrayList<Double> costList;
@@ -166,18 +172,36 @@ public class InvoiceController {
     private String phoneNumber;
     private String address;
     private Stage addCustomerStage;
+    private TextField refField;
+
     public String getFullName(){
         return fullName;
     }
-    @FXML protected void cashChecked(){
+
+
+    @FXML
+    public void showRef(String s){
+        if (refField == null) {
+            refField = new TextField();
+            itemCountVBox.getChildren().add(0, refField);
+        }
+        refField.setPromptText(s);
+    }
+    @FXML
+    protected void cashChecked(){
         if (cashCheckBox.isSelected()){
             bKashCheckBox.setSelected(false);
             nogodCheckBox.setSelected(false);
             cardCheckBox.setSelected(false);
             otherCheckBox.setSelected(false);
+            if (refField != null){
+                refField=null;
+                itemCountVBox.getChildren().remove(0);
+            }
         }
 
     }
+
     @FXML
     protected void bKashChecked(){
         if (bKashCheckBox.isSelected()){
@@ -186,7 +210,7 @@ public class InvoiceController {
             cardCheckBox.setSelected(false);
             otherCheckBox.setSelected(false);
         }
-
+        showRef("Reference No.");
     }
     @FXML
     protected void nogodChecked(){
@@ -196,6 +220,7 @@ public class InvoiceController {
             cardCheckBox.setSelected(false);
             otherCheckBox.setSelected(false);
         }
+        showRef("Reference No.");
     }
     @FXML
     protected void cardChecked(){
@@ -205,7 +230,7 @@ public class InvoiceController {
             cashCheckBox.setSelected(false);
             otherCheckBox.setSelected(false);
         }
-
+        showRef("Reference No.");
     }
     @FXML
     protected void otherChecked(){
@@ -215,6 +240,7 @@ public class InvoiceController {
             cardCheckBox.setSelected(false);
             cashCheckBox.setSelected(false);
         }
+        showRef("Other");
     }
     @FXML
     protected void findCustomerButtonPressed(){
@@ -396,7 +422,15 @@ public class InvoiceController {
     }
     @FXML
     protected void onTakePhotoButtonPressed(){
+//        Dimension resolution = new Dimension(1280, 720); // HD 720p
+
+        Dimension resolution = new Dimension(1920, 1080);// 1080p
         Webcam webcam = Webcam.getDefault();
+        webcam.setCustomViewSizes(new Dimension[] { resolution }); // register custom resolution
+        webcam.setViewSize(resolution); // set it
+        webcam.open();
+// to the job ...
+        webcam.close();
         webcam.open();
         BufferedImage image = webcam.getImage();
 
@@ -412,7 +446,7 @@ public class InvoiceController {
         }
         finally {
             //not closing the webcam makes for faster image capturing
-//            webcam.close();
+            webcam.close();
         }
 
 
@@ -454,6 +488,7 @@ public class InvoiceController {
         }
     }
     public void initialize() throws IOException {
+        cashCheckBox.setSelected(true);
         itemName = new ArrayList<String>();
         itemCost = new ArrayList<Double>();
         costList = new ArrayList<Double>();
@@ -466,24 +501,24 @@ public class InvoiceController {
         // asynchronously retrieve all users
 
         // TODO: Uncomment this (conserving api usage)
-        ApiFuture<QuerySnapshot> query = db.collection("products").get();
-
-        QuerySnapshot querySnapshot = null;
-        try {
-            querySnapshot = query.get();
-        } catch (Exception e) {
-           System.out.println("Error fetching data");
-        }
-        List<QueryDocumentSnapshot> documents = querySnapshot.getDocuments();
-        for (QueryDocumentSnapshot document : documents) {
-            String name = document.getString("name");
-            Double cost = document.getDouble("cost");
-            itemName.add(name);
-            itemCost.add(cost);
-//            System.out.println("User: " + document.getId());
-//            System.out.println("First: " + document.getString("name"));
-//            System.out.println("Middle: " + document.getDouble("cost"));
-        }
+//        ApiFuture<QuerySnapshot> query = db.collection("products").get();
+//
+//        QuerySnapshot querySnapshot = null;
+//        try {
+//            querySnapshot = query.get();
+//        } catch (Exception e) {
+//           System.out.println("Error fetching data");
+//        }
+//        List<QueryDocumentSnapshot> documents = querySnapshot.getDocuments();
+//        for (QueryDocumentSnapshot document : documents) {
+//            String name = document.getString("name");
+//            Double cost = document.getDouble("cost");
+//            itemName.add(name);
+//            itemCost.add(cost);
+////            System.out.println("User: " + document.getId());
+////            System.out.println("First: " + document.getString("name"));
+////            System.out.println("Middle: " + document.getDouble("cost"));
+//        }
 
 // Done: remove static items and use database later
 //        itemName.add("X-Ray");
