@@ -14,6 +14,9 @@ public class FindCustomerViewController {
     private TextField phoneNumber;
     @FXML
     private TextField address;
+
+    @FXML
+    private TextField documentId;
     @FXML
     protected void findUser(){
         System.out.println("Edit Button Pressed");
@@ -26,6 +29,7 @@ public class FindCustomerViewController {
             for (DocumentSnapshot document : querySnapshot.get().getDocuments()) {
                 fullName.setText(document.getString("name"));
                 address.setText(document.getString("address"));
+                documentId.setText(document.getId());
                 break;
             }
 

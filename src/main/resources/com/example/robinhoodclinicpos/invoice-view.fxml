@@ -81,7 +81,8 @@
       <ImageView fx:id="webcamPhoto" fitHeight="206.0" fitWidth="385.0" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="3" GridPane.halignment="CENTER" GridPane.rowIndex="4" >
 
       </ImageView>
-      <ListView fx:id="customerItemListView" prefHeight="563.0" prefWidth="494.0" GridPane.columnIndex="4" GridPane.columnSpan="2" GridPane.halignment="CENTER" GridPane.rowIndex="2">
+      <TextField fx:id="receptionistInfo" visible="false"></TextField>
+        <ListView fx:id="customerItemListView" prefHeight="563.0" prefWidth="494.0" GridPane.columnIndex="4" GridPane.columnSpan="2" GridPane.halignment="CENTER" GridPane.rowIndex="2">
          <GridPane.margin>
             <Insets bottom="10.0" left="70.0" right="100.0" top="10.0" />
          </GridPane.margin>

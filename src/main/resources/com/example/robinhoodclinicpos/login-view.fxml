@@ -17,6 +17,7 @@
                 <Image url="@./images/robinhoodicon.png" />
             </image>
         </ImageView>
+        <TextField fx:id="receptionistId" visible="false" />
         <HBox alignment="CENTER" prefHeight="165.0" prefWidth="600.0" spacing="70.0">
             <children>
                 <VBox alignment="CENTER" prefHeight="175.0" prefWidth="218.0">

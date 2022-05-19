@@ -2,7 +2,11 @@ package com.example.robinhoodclinicpos;
 
 import com.github.sarxos.webcam.Webcam;
 import com.github.sarxos.webcam.util.ImageUtils;
+import com.google.api.core.ApiFuture;
+import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.Firestore;
+import com.google.cloud.firestore.QueryDocumentSnapshot;
+import com.google.cloud.firestore.QuerySnapshot;
 import com.google.firebase.cloud.FirestoreClient;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -30,6 +34,9 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 class CustomCell extends ListCell<String> {
     private Button actionBtn;
@@ -162,23 +169,98 @@ public class InvoiceController {
 
     private String referenceNo;
 
+    private String customerDocumentID;
+
     private ObservableList<String> observableList = FXCollections.observableArrayList();
     private ObservableList<String> customerItemObservableList = FXCollections.observableArrayList();
     private ArrayList<Double> costList;
+    private ArrayList<String> boughtItemNameList;
+    private ArrayList<Integer> boughtItemQuantityList;
     private ArrayList<String> itemName;
     private ArrayList<Double> itemCost;
-
     private String fullName;
     private String phoneNumber;
     private String address;
     private Stage addCustomerStage;
     private TextField refField;
+    private String receptionistId;
 
+    private String paymentMethod;
     public String getFullName(){
         return fullName;
     }
+    public void setReceptionistId(String s){ receptionistId = s; }
 
+    @FXML
+    protected void generateInvoicePressed(){
+        //Save to database first, if error don't continue
+        //info
+        //receptionistId
+        //customerDocumentID
+        //System.currentTimeMillis()
+        //discount flat 20 taka
+        //paymentMethod
+//        if (paymentMethod != "Cash"){
+//            if(paymentMethod == "Other"){
+//                other = refField.getText();
+//            }
+//            else{
+//                paymentRef =
+//            }
+//        }
+        //totalBill.getText()
+        try{
+        Map<String, Integer> items = new HashMap<String, Integer>();
+        for(int i = 0; i<boughtItemNameList.size(); i++){
+            items.put(boughtItemNameList.get(i), boughtItemQuantityList.get(i));
+        }
+        Firestore db = FirestoreClient.getFirestore();
+        Map<String, Object> data = new HashMap<>();
+        System.out.println(("invoice not error"));
+        data.put("invoiceBy", db.collection("users").document(receptionistId));
 
+            System.out.println(("discount not error"));
+        data.put("discount", 20);
+
+            System.out.println(("setting items json not error"));
+        data.put("items", items);
+
+            System.out.println(("customerid not error"));
+        data.put("customerId", db.collection("customers").document(customerDocumentID));
+
+            System.out.println(("paymentmethod not error"));
+        data.put("paymentMethod", paymentMethod);
+        if (paymentMethod != "Cash"){
+            if(paymentMethod == "Other"){
+
+                System.out.println(("other not error"));
+                data.put("Other", refField.getText());
+            }
+            else{
+
+                System.out.println(("paymentref not error"));
+                data.put("paymentRef", refField.getText());
+            }
+        }
+////
+////            System.out.println(("totalbill not error"));
+        data.put("totalBill", totalBill.getText());
+        data.put("time", System.currentTimeMillis());
+            System.out.println(("adding data not error"));
+
+            ApiFuture<DocumentReference> ref = db.collection("invoices").add(data);
+
+            System.out.println(("getting invoice id not error"));
+
+            String invoiceId = ref.get().getId();
+
+        System.out.println(invoiceId);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Invoice wasn't created in database");
+            return;
+        }
+    }
     @FXML
     public void showRef(String s){
         if (refField == null) {
@@ -190,6 +272,7 @@ public class InvoiceController {
     @FXML
     protected void cashChecked(){
         if (cashCheckBox.isSelected()){
+            paymentMethod = "Cash";
             bKashCheckBox.setSelected(false);
             nogodCheckBox.setSelected(false);
             cardCheckBox.setSelected(false);
@@ -205,6 +288,7 @@ public class InvoiceController {
     @FXML
     protected void bKashChecked(){
         if (bKashCheckBox.isSelected()){
+            paymentMethod = "bKash";
             cashCheckBox.setSelected(false);
             nogodCheckBox.setSelected(false);
             cardCheckBox.setSelected(false);
@@ -215,6 +299,7 @@ public class InvoiceController {
     @FXML
     protected void nogodChecked(){
         if (nogodCheckBox.isSelected()){
+            paymentMethod = "Nogod";
             bKashCheckBox.setSelected(false);
             cashCheckBox.setSelected(false);
             cardCheckBox.setSelected(false);
@@ -225,6 +310,7 @@ public class InvoiceController {
     @FXML
     protected void cardChecked(){
         if (cardCheckBox.isSelected()){
+            paymentMethod = "Card";
             bKashCheckBox.setSelected(false);
             nogodCheckBox.setSelected(false);
             cashCheckBox.setSelected(false);
@@ -235,6 +321,7 @@ public class InvoiceController {
     @FXML
     protected void otherChecked(){
         if (otherCheckBox.isSelected()){
+            paymentMethod = "Other";
             bKashCheckBox.setSelected(false);
             nogodCheckBox.setSelected(false);
             cardCheckBox.setSelected(false);
@@ -261,6 +348,8 @@ public class InvoiceController {
             phoneNumber = temp.getText();
             temp = (TextField) loader.getNamespace().get("address");
             address = temp.getText();
+            temp = (TextField) loader.getNamespace().get("documentId");
+            customerDocumentID = temp.getText();
             customerName.setText(fullName);
             // Hide this current window (if this is what you want)
 //            ((Node)(event.getSource())).getScene().getWindow().hide();
@@ -319,6 +408,9 @@ public class InvoiceController {
             phoneNumber = temp.getText();
             temp = (TextField) loader.getNamespace().get("address");
             address = temp.getText();
+            temp = (TextField) loader.getNamespace().get("documentId");
+            customerDocumentID = temp.getText();
+            System.out.println(customerDocumentID);
             customerName.setText(fullName);
             // Hide this current window (if this is what you want)
 //            ((Node)(event.getSource())).getScene().getWindow().hide();
@@ -354,10 +446,7 @@ public class InvoiceController {
             }
         }
     }
-    @FXML
-    protected void generateInvoicePressed(){
-        System.out.println();
-    }
+
     @FXML
     protected void addItemButtonPressed(){
         try {
@@ -378,6 +467,8 @@ public class InvoiceController {
                 }
             });
             costList.add(currentItemCost*quantity);
+            boughtItemQuantityList.add(quantity);
+            boughtItemNameList.add(currentItemName);
 
             double prev = Double.parseDouble(totalBill.getText());
             prev += currentItemCost*quantity;
@@ -408,6 +499,8 @@ public class InvoiceController {
                 double p = costList.get(itemIndex);
                 costList.remove(itemIndex);
 
+                boughtItemQuantityList.remove(itemIndex);
+                boughtItemNameList.remove(itemIndex);
                 double prev = Double.parseDouble(totalBill.getText());
                 prev -= p;
                 totalBill.setText(Double.toString(prev));
@@ -488,10 +581,14 @@ public class InvoiceController {
         }
     }
     public void initialize() throws IOException {
+        paymentMethod = "Cash";
         cashCheckBox.setSelected(true);
+
         itemName = new ArrayList<String>();
         itemCost = new ArrayList<Double>();
         costList = new ArrayList<Double>();
+        boughtItemNameList = new ArrayList<String>();
+        boughtItemQuantityList = new ArrayList<Integer>();
 
 //        InputStream serviceAccount = new FileInputStream("robinhood-clinic-firebase-adminsdk-yzfpk-9aedc0fc60.json");
 //        GoogleCredentials credentials = GoogleCredentials.fromStream(serviceAccount);
@@ -501,24 +598,28 @@ public class InvoiceController {
         // asynchronously retrieve all users
 
         // TODO: Uncomment this (conserving api usage)
-//        ApiFuture<QuerySnapshot> query = db.collection("products").get();
-//
-//        QuerySnapshot querySnapshot = null;
-//        try {
-//            querySnapshot = query.get();
-//        } catch (Exception e) {
-//           System.out.println("Error fetching data");
-//        }
-//        List<QueryDocumentSnapshot> documents = querySnapshot.getDocuments();
-//        for (QueryDocumentSnapshot document : documents) {
-//            String name = document.getString("name");
-//            Double cost = document.getDouble("cost");
-//            itemName.add(name);
-//            itemCost.add(cost);
-////            System.out.println("User: " + document.getId());
-////            System.out.println("First: " + document.getString("name"));
-////            System.out.println("Middle: " + document.getDouble("cost"));
-//        }
+        ApiFuture<QuerySnapshot> query = db.collection("products").get();
+
+        QuerySnapshot querySnapshot = null;
+        try {
+            querySnapshot = query.get();
+        } catch (Exception e) {
+           System.out.println("Error fetching data");
+        }
+        try{
+        List<QueryDocumentSnapshot> documents = querySnapshot.getDocuments();
+        for (QueryDocumentSnapshot document : documents) {
+            String name = document.getString("name");
+            Double cost = document.getDouble("cost");
+            itemName.add(name);
+            itemCost.add(cost);
+//            System.out.println("User: " + document.getId());
+//            System.out.println("First: " + document.getString("name"));
+//            System.out.println("Middle: " + document.getDouble("cost"));
+        }
+        }catch (Exception e){
+            System.out.println("Could not fetch documents");
+        }
 
 // Done: remove static items and use database later
 //        itemName.add("X-Ray");

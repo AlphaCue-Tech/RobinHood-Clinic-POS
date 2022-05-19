@@ -24,6 +24,8 @@ public class LoginController {
     private PasswordField password;
 
     @FXML
+    private TextField receptionistId;
+    @FXML
     protected void onLoginButtonPressed() {
         String user = username.getText();
         String pass = password.getText();
@@ -55,12 +57,16 @@ public class LoginController {
                     mp.put("password", pd);
                     mp.put("lastLogin", System.currentTimeMillis());
                     db.collection("users").document(id).set(mp);
+                    receptionistId.setText(id);
                     FXMLLoader loader = new FXMLLoader(RobinHoodApplication.class.getResource("invoice-view.fxml"));
                     //using the previous stage give some UI errors
                     Stage stage = (Stage) username.getScene().getWindow();
+
                     stage.close();
                     Scene scene = new Scene(loader.load(), 1920, 1080);
                     stage.setScene(scene);
+                    InvoiceController c = loader.getController();
+                    c.setReceptionistId(id);
                     stage.show();
                 }
                 catch(Exception e){
