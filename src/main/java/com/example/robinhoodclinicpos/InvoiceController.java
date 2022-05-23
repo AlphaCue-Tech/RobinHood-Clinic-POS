@@ -191,75 +191,61 @@ public class InvoiceController {
     }
     public void setReceptionistId(String s){ receptionistId = s; }
 
-    @FXML
-    protected void generateInvoicePressed(){
-        //Save to database first, if error don't continue
-        //info
-        //receptionistId
-        //customerDocumentID
-        //System.currentTimeMillis()
-        //discount flat 20 taka
-        //paymentMethod
-//        if (paymentMethod != "Cash"){
-//            if(paymentMethod == "Other"){
-//                other = refField.getText();
-//            }
-//            else{
-//                paymentRef =
-//            }
-//        }
-        //totalBill.getText()
+
+    public void createInvoiceInDatabase(){
         try{
-        Map<String, Integer> items = new HashMap<String, Integer>();
-        for(int i = 0; i<boughtItemNameList.size(); i++){
-            items.put(boughtItemNameList.get(i), boughtItemQuantityList.get(i));
-        }
-        Firestore db = FirestoreClient.getFirestore();
-        Map<String, Object> data = new HashMap<>();
-        System.out.println(("invoice not error"));
-        data.put("invoiceBy", db.collection("users").document(receptionistId));
-
-            System.out.println(("discount not error"));
-        data.put("discount", 20);
-
-            System.out.println(("setting items json not error"));
-        data.put("items", items);
-
-            System.out.println(("customerid not error"));
-        data.put("customerId", db.collection("customers").document(customerDocumentID));
-
-            System.out.println(("paymentmethod not error"));
-        data.put("paymentMethod", paymentMethod);
-        if (paymentMethod != "Cash"){
-            if(paymentMethod == "Other"){
-
-                System.out.println(("other not error"));
-                data.put("Other", refField.getText());
+            Map<String, Integer> items = new HashMap<String, Integer>();
+            for(int i = 0; i<boughtItemNameList.size(); i++){
+                items.put(boughtItemNameList.get(i), boughtItemQuantityList.get(i));
             }
-            else{
-
-                System.out.println(("paymentref not error"));
-                data.put("paymentRef", refField.getText());
+            Firestore db = FirestoreClient.getFirestore();
+            Map<String, Object> data = new HashMap<>();
+            data.put("invoiceBy", db.collection("users").document(receptionistId));
+            data.put("discount", 0);
+            data.put("items", items);
+            data.put("customerId", db.collection("customers").document(customerDocumentID));
+            data.put("paymentMethod", paymentMethod);
+            if (paymentMethod != "Cash"){
+                if(paymentMethod == "Other"){
+                    data.put("Other", refField.getText());
+                }
+                else{
+                    data.put("paymentRef", refField.getText());
+                }
             }
-        }
-////
-////            System.out.println(("totalbill not error"));
-        data.put("totalBill", totalBill.getText());
-        data.put("time", System.currentTimeMillis());
-            System.out.println(("adding data not error"));
-
+            data.put("totalBill", totalBill.getText());
+            data.put("time", System.currentTimeMillis());
             ApiFuture<DocumentReference> ref = db.collection("invoices").add(data);
-
-            System.out.println(("getting invoice id not error"));
-
             String invoiceId = ref.get().getId();
 
-        System.out.println(invoiceId);
+            System.out.println(invoiceId);
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("Invoice wasn't created in database");
             return;
         }
+    }
+
+
+    public void generateInvoicePDF(){
+        String payRef = "";
+        if (paymentMethod != "Cash"){
+            if(paymentMethod == "Other"){
+                payRef = refField.getText();
+            }
+            else{
+                payRef = refField.getText();
+            }
+        }
+        new InvoicePdfGenerator(fullName, phoneNumber, address, paymentMethod, payRef, boughtItemNameList, boughtItemQuantityList, costList, totalBill.getText());
+    }
+    @FXML
+    protected void generateInvoicePressed(){
+        //Save to database first, if error don't continue
+        //Create Invoice in Database
+//        createInvoiceInDatabase();
+        generateInvoicePDF();
+
     }
     @FXML
     public void showRef(String s){
@@ -580,6 +566,26 @@ public class InvoiceController {
             System.out.println("Error searching");
         }
     }
+    public void setAvailableItems(){
+        Firestore db = FirestoreClient.getFirestore();
+        // asynchronously retrieve all items
+        ApiFuture<QuerySnapshot> query = db.collection("products").get();
+
+        QuerySnapshot querySnapshot = null;
+
+        try{
+            querySnapshot = query.get();
+            List<QueryDocumentSnapshot> documents = querySnapshot.getDocuments();
+            for (QueryDocumentSnapshot document : documents) {
+                String name = document.getString("name");
+                Double cost = document.getDouble("cost");
+                itemName.add(name);
+                itemCost.add(cost);
+            }
+        }catch (Exception e){
+            System.out.println("Could not fetch documents");
+        }
+    }
     public void initialize() throws IOException {
         paymentMethod = "Cash";
         cashCheckBox.setSelected(true);
@@ -594,32 +600,9 @@ public class InvoiceController {
 //        GoogleCredentials credentials = GoogleCredentials.fromStream(serviceAccount);
 //        FirebaseOptions options = new FirebaseOptions.Builder().setCredentials(credentials).build();
 //        FirebaseApp.initializeApp(options);
-        Firestore db = FirestoreClient.getFirestore();
-        // asynchronously retrieve all users
 
         // TODO: Uncomment this (conserving api usage)
-        ApiFuture<QuerySnapshot> query = db.collection("products").get();
-
-        QuerySnapshot querySnapshot = null;
-        try {
-            querySnapshot = query.get();
-        } catch (Exception e) {
-           System.out.println("Error fetching data");
-        }
-        try{
-        List<QueryDocumentSnapshot> documents = querySnapshot.getDocuments();
-        for (QueryDocumentSnapshot document : documents) {
-            String name = document.getString("name");
-            Double cost = document.getDouble("cost");
-            itemName.add(name);
-            itemCost.add(cost);
-//            System.out.println("User: " + document.getId());
-//            System.out.println("First: " + document.getString("name"));
-//            System.out.println("Middle: " + document.getDouble("cost"));
-        }
-        }catch (Exception e){
-            System.out.println("Could not fetch documents");
-        }
+        setAvailableItems();
 
 // Done: remove static items and use database later
 //        itemName.add("X-Ray");

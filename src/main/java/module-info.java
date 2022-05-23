@@ -19,6 +19,10 @@ module com.example.robinhoodclinicpos {
     requires webcam.capture;
     requires javafx.swing;
     requires google.cloud.storage;
+    requires io;
+    requires kernel;
+    requires layout;
+    requires org.apache.pdfbox;
 
     opens com.example.robinhoodclinicpos to javafx.fxml;
     exports com.example.robinhoodclinicpos;
