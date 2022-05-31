@@ -23,7 +23,7 @@ public class PrintThisPDF {
             fis.close();
         } catch (Exception e){
             e.printStackTrace();
-            System.out.println("Could not print PDF");
+            System.out.println("Printer Error. Could not print PDF");
         }
     }
 }

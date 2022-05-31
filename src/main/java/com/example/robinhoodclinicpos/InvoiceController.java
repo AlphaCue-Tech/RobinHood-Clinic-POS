@@ -8,6 +8,7 @@ import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.QueryDocumentSnapshot;
 import com.google.cloud.firestore.QuerySnapshot;
 import com.google.firebase.cloud.FirestoreClient;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingFXUtils;
@@ -176,8 +177,12 @@ public class InvoiceController {
     private ArrayList<Double> costList;
     private ArrayList<String> boughtItemNameList;
     private ArrayList<Integer> boughtItemQuantityList;
+
+    private ArrayList<String> boughtItemIDList;
     private ArrayList<String> itemName;
     private ArrayList<Double> itemCost;
+
+    private ArrayList<String> itemID;
     private String fullName;
     private String phoneNumber;
     private String address;
@@ -186,17 +191,111 @@ public class InvoiceController {
     private String receptionistId;
 
     private String paymentMethod;
+    Thread taskThread;
+    Webcam webcam;
     public String getFullName(){
         return fullName;
     }
     public void setReceptionistId(String s){ receptionistId = s; }
 
+    public void webcamLiveView(){
 
+//        while(true) {
+//            System.out.println("Taking an iamge for liveview");
+            BufferedImage image = webcam.getImage();
+            Image im = SwingFXUtils.toFXImage(image, null);
+            webcamPhoto.setImage(im);
+
+    }
+
+    @FXML
+    protected void dailySummaryButtonPressed(){
+        //Redirect to Additional Cost Page
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Finished for Today?", ButtonType.YES, ButtonType.NO, ButtonType.CANCEL);
+        alert.showAndWait();
+
+        if (alert.getResult() == ButtonType.YES) {
+            try {
+                FXMLLoader loader = new FXMLLoader(RobinHoodApplication.class.getResource("additionalCost-view.fxml"));
+                //using the previous stage give some UI errors
+                Stage stage = (Stage) totalBill.getScene().getWindow();
+                stage.close();
+
+                Scene scene = new Scene(loader.load(), 800, 600);
+//                stage.setTitle("RobinHood Clinic");
+//                //resize icon because that didn't work
+////        stage.getIcons().add(new Image("file:images/robinhoodicon(1).png"));
+//                stage.getIcons().add(new Image(getClass().getResourceAsStream("images/robinhoodicon(1).png")));
+//                stage.setMaximized(true);
+                stage.setScene(scene);
+                stage.show();
+
+            }catch (IOException io){
+                io.printStackTrace();
+            }
+        }
+
+    }
+
+    @FXML
+    protected void onTakePhotoButtonPressed(){
+//        webcam.open();
+//// to the job ...
+//        webcam.close();
+//        webcam.open();
+        if(taskThread != null) {
+            taskThread.interrupt();
+        }
+        Dimension resolution = new Dimension(1920, 1080);// 1080p
+
+
+               BufferedImage image = webcam.getImage();
+
+        try {
+            ImageIO.write(image, ImageUtils.FORMAT_JPG, new File("src/main/resources/com/example/robinhoodclinicpos/images/selfie.jpg"));
+
+//            Thread.sleep(2000);
+            Image im = SwingFXUtils.toFXImage(image, null);
+            webcamPhoto.setImage(im);
+        } catch (Exception e) {
+
+            System.out.println("Could not capture image");
+            System.out.println(e);
+        }
+        finally {
+            //not closing the webcam makes for faster image capturing
+//            webcam.close();
+
+            if(taskThread != null) {
+                taskThread.start();
+            }
+        }
+
+
+        //Takes a photo but it doesn't show up. can probably save it to the database. also there is no control for taking the photo
+//        try {
+//            FrameGrabber grabber = new OpenCVFrameGrabber(0);
+//            OpenCVFrameConverter.ToIplImage converter = new OpenCVFrameConverter.ToIplImage();
+//            grabber.start();
+//            Frame frame = grabber.grab();
+//            IplImage img = converter.convert(frame);
+////            cvSaveImage("src/main/resources/com/example/robinhoodclinicpos/images/selfie.png", img);
+//
+//            cvSaveImage("selfie.png", img);
+//            Thread.sleep(3000);
+////            webcamPhoto.setImage(new Image(getClass().getResourceAsStream("images/selfie.png")));
+//
+//            webcamPhoto.setImage(new Image(getClass().getResourceAsStream("../../../../selfie.png")));
+//        } catch(Exception e){
+//            System.out.println(e);
+//            System.out.println("Encountered an error while taking webcam photo");
+//        }
+    }
     public void createInvoiceInDatabase(){
         try{
             Map<String, Integer> items = new HashMap<String, Integer>();
-            for(int i = 0; i<boughtItemNameList.size(); i++){
-                items.put(boughtItemNameList.get(i), boughtItemQuantityList.get(i));
+            for(int i = 0; i<boughtItemIDList.size(); i++){
+                items.put(boughtItemIDList.get(i), boughtItemQuantityList.get(i));
             }
             Firestore db = FirestoreClient.getFirestore();
             Map<String, Object> data = new HashMap<>();
@@ -243,7 +342,7 @@ public class InvoiceController {
     protected void generateInvoicePressed(){
         //Save to database first, if error don't continue
         //Create Invoice in Database
-//        createInvoiceInDatabase();
+        createInvoiceInDatabase();
         generateInvoicePDF();
 
     }
@@ -442,6 +541,7 @@ public class InvoiceController {
             int itemIndex = itemListView.getSelectionModel().getSelectedIndex();
             String currentItemName = itemName.get(itemIndex);
             double currentItemCost = itemCost.get(itemIndex);
+            String currentItemID = itemID.get(itemIndex);
             System.out.println(currentItemName);
             System.out.println(currentItemCost*quantity);
             customerItemObservableList.add("Item: "+currentItemName+" Quantity: "+Integer.toString(quantity)+" Cost: "+Double.toString(currentItemCost*quantity));
@@ -455,7 +555,7 @@ public class InvoiceController {
             costList.add(currentItemCost*quantity);
             boughtItemQuantityList.add(quantity);
             boughtItemNameList.add(currentItemName);
-
+            boughtItemIDList.add(currentItemID);
             double prev = Double.parseDouble(totalBill.getText());
             prev += currentItemCost*quantity;
             totalBill.setText(Double.toString(prev));
@@ -487,6 +587,7 @@ public class InvoiceController {
 
                 boughtItemQuantityList.remove(itemIndex);
                 boughtItemNameList.remove(itemIndex);
+                boughtItemIDList.remove(itemIndex);
                 double prev = Double.parseDouble(totalBill.getText());
                 prev -= p;
                 totalBill.setText(Double.toString(prev));
@@ -499,55 +600,7 @@ public class InvoiceController {
         }
 
     }
-    @FXML
-    protected void onTakePhotoButtonPressed(){
-//        Dimension resolution = new Dimension(1280, 720); // HD 720p
 
-        Dimension resolution = new Dimension(1920, 1080);// 1080p
-        Webcam webcam = Webcam.getDefault();
-        webcam.setCustomViewSizes(new Dimension[] { resolution }); // register custom resolution
-        webcam.setViewSize(resolution); // set it
-        webcam.open();
-// to the job ...
-        webcam.close();
-        webcam.open();
-        BufferedImage image = webcam.getImage();
-
-        try {
-            ImageIO.write(image, ImageUtils.FORMAT_JPG, new File("src/main/resources/com/example/robinhoodclinicpos/images/selfie.jpg"));
-            Thread.sleep(3000);
-            Image im = SwingFXUtils.toFXImage(image, null);
-            webcamPhoto.setImage(im);
-        } catch (Exception e) {
-
-            System.out.println("Could not capture image");
-            System.out.println(e);
-        }
-        finally {
-            //not closing the webcam makes for faster image capturing
-            webcam.close();
-        }
-
-
-        //Takes a photo but it doesn't show up. can probably save it to the database. also there is no control for taking the photo
-//        try {
-//            FrameGrabber grabber = new OpenCVFrameGrabber(0);
-//            OpenCVFrameConverter.ToIplImage converter = new OpenCVFrameConverter.ToIplImage();
-//            grabber.start();
-//            Frame frame = grabber.grab();
-//            IplImage img = converter.convert(frame);
-////            cvSaveImage("src/main/resources/com/example/robinhoodclinicpos/images/selfie.png", img);
-//
-//            cvSaveImage("selfie.png", img);
-//            Thread.sleep(3000);
-////            webcamPhoto.setImage(new Image(getClass().getResourceAsStream("images/selfie.png")));
-//
-//            webcamPhoto.setImage(new Image(getClass().getResourceAsStream("../../../../selfie.png")));
-//        } catch(Exception e){
-//            System.out.println(e);
-//            System.out.println("Encountered an error while taking webcam photo");
-//        }
-    }
     @FXML
     protected void searchItem(){
         try {
@@ -579,8 +632,10 @@ public class InvoiceController {
             for (QueryDocumentSnapshot document : documents) {
                 String name = document.getString("name");
                 Double cost = document.getDouble("cost");
+
                 itemName.add(name);
                 itemCost.add(cost);
+                itemID.add(document.getId());
             }
         }catch (Exception e){
             System.out.println("Could not fetch documents");
@@ -592,7 +647,9 @@ public class InvoiceController {
 
         itemName = new ArrayList<String>();
         itemCost = new ArrayList<Double>();
+        itemID = new ArrayList<String>();
         costList = new ArrayList<Double>();
+        boughtItemIDList = new ArrayList<String>();
         boughtItemNameList = new ArrayList<String>();
         boughtItemQuantityList = new ArrayList<Integer>();
 
@@ -628,7 +685,47 @@ public class InvoiceController {
         });
 
         System.out.println(itemListView);
-    }
 
+        //        Dimension resolution = new Dimension(1280, 720); // HD 720p
+
+//        Dimension resolution = new Dimension(1920, 1080);// 1080p
+
+        startCamera();
+        startWebcamThread();
+
+    }
+    void startCamera(){
+        Dimension resolution = new Dimension(480, 360);// 1080p
+        webcam = Webcam.getDefault();
+        webcam.setCustomViewSizes(new Dimension[] { resolution }); // register custom resolution
+        webcam.setViewSize(resolution); // set it
+        System.out.println("Webcam Initialized. Showing live view");
+        webcam.open();
+    }
+    void startWebcamThread(){
+        if (taskThread == null) {
+            taskThread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    while (true) {
+
+                        Platform.runLater(new Runnable() {
+                            @Override
+                            public void run() {
+                                webcamLiveView();
+                            }
+                        });
+                        try {
+                            Thread.sleep(300);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+
+                    }
+                }
+            });
+        }
+        taskThread.start();
+    }
 
 }
