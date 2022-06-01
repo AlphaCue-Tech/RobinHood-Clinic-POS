@@ -77,6 +77,8 @@
             <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
          </padding>
         </ListView>
+<!--        <Button mnemonicParsing="false" onAction="#onTakePhotoButtonPressed" prefHeight="54.0" prefWidth="228.0" text="Take Photo" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="4" />-->
+
       <Button mnemonicParsing="false" onAction="#onTakePhotoButtonPressed" prefHeight="54.0" prefWidth="228.0" text="Take Photo" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="4" />
       <ImageView fx:id="webcamPhoto" fitHeight="206.0" fitWidth="385.0" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="3" GridPane.halignment="CENTER" GridPane.rowIndex="4">
 

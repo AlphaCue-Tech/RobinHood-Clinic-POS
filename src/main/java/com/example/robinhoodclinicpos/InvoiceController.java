@@ -222,12 +222,15 @@ public class InvoiceController {
                 stage.close();
 
                 Scene scene = new Scene(loader.load(), 800, 600);
-//                stage.setTitle("RobinHood Clinic");
-//                //resize icon because that didn't work
+                stage.setTitle("RobinHood Clinic");
+//                //resizing icon because that didn't work
 ////        stage.getIcons().add(new Image("file:images/robinhoodicon(1).png"));
 //                stage.getIcons().add(new Image(getClass().getResourceAsStream("images/robinhoodicon(1).png")));
 //                stage.setMaximized(true);
                 stage.setScene(scene);
+                AdditionalCostController c =  loader.getController();
+                c.setReceptionistId(receptionistId);
+
                 stage.show();
 
             }catch (IOException io){
@@ -312,7 +315,7 @@ public class InvoiceController {
                     data.put("paymentRef", refField.getText());
                 }
             }
-            data.put("totalBill", totalBill.getText());
+            data.put("totalBill", Double.parseDouble(totalBill.getText()));
             data.put("time", System.currentTimeMillis());
             ApiFuture<DocumentReference> ref = db.collection("invoices").add(data);
             String invoiceId = ref.get().getId();
