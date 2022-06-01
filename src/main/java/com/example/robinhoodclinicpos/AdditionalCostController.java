@@ -16,13 +16,16 @@ import java.util.Date;
 import java.util.List;
 
 public class AdditionalCostController {
+    ArrayList<String> usernameList;
+    ArrayList<String> phoneNumberList;
+    ArrayList<Double> costList;
     @FXML
     private TextField costDescription;
     @FXML
     private TextField cost;
 
     private ArrayList<String> costDescriptionList;
-    private ArrayList<Double> costList;
+    private ArrayList<Double> additionalCostList;
 
     private String receptionistId;
 
@@ -62,9 +65,9 @@ public class AdditionalCostController {
         ApiFuture<QuerySnapshot> query = db.collection("invoices").get();
 
         QuerySnapshot querySnapshot = null;
-        ArrayList<String> username = new ArrayList<String>();
-        ArrayList<String> phoneNumber = new ArrayList<String>();
-        ArrayList<Double> cost = new ArrayList<Double>();
+        usernameList = new ArrayList<String>();
+        phoneNumberList = new ArrayList<String>();
+        costList = new ArrayList<Double>();
 
         try{
             querySnapshot = query.get();
@@ -102,14 +105,22 @@ public class AdditionalCostController {
 
                         ApiFuture<DocumentSnapshot> q1 = customerRef.get();
                         DocumentSnapshot customer = q1.get();
-                        System.out.println(customer.getString("name"));
-                        System.out.println(customer.getString("phone"));
-                        System.out.println(document.getDouble("totalBill"));
-                        System.out.println(document.getDouble("discount"));
+                        String uname = customer.getString("name");
+                        String phone = customer.getString("phone");
+                        Double totalBill = customer.getDouble("totalBill");
+                        Double discount = customer.getDouble("discount");
+                        System.out.println(uname);
+                        System.out.println(phone);
+                        System.out.println(totalBill);
+                        System.out.println(discount);
+                        usernameList.add(uname);
+                        phoneNumberList.add(phone);
+                        costList.add(totalBill-discount);
                     }
 
                 }
             }
+
         }catch (Exception e){
             e.printStackTrace();
             System.out.println("Could not fetch documents");
@@ -117,7 +128,7 @@ public class AdditionalCostController {
     }
     @FXML
     protected void addCostButtonPressed(){
-        costList.add(Double.parseDouble(cost.getText()));
+        additionalCostList.add(Double.parseDouble(cost.getText()));
         costDescriptionList.add(costDescription.getText());
         cost.setText("");
         costDescription.setText("");
@@ -127,13 +138,15 @@ public class AdditionalCostController {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Finished for Today?", ButtonType.YES, ButtonType.NO, ButtonType.CANCEL);
         alert.showAndWait();
         if (alert.getResult() == ButtonType.YES) {
-            for(int i = 0; i<costList.size(); i++){
-                System.out.println(costList.get(i));
-                System.out.println(costDescriptionList.get(i));
-            }
-            //Get all invoices of today from database
+//            for(int i = 0; i<costList.size(); i++){
+//                System.out.println(costList.get(i));
+//                System.out.println(costDescriptionList.get(i));
+//            }
+            //Get all invoices of today from database and generate pdf
             getInvoicesForToday();
-            //Generate the daily report from all that data
+            //Generate summary PDF
+            new DailySummaryPdfGenerator(usernameList, phoneNumberList, costList, additionalCostList, costDescriptionList);
+            //Print PDF
             Stage stage = (Stage) cost.getScene().getWindow();
             stage.close();
         }

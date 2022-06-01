@@ -169,7 +169,7 @@ public class InvoiceController {
     private VBox itemCountVBox;
 
     private String referenceNo;
-
+    private boolean cameraOn=false;
     private String customerDocumentID;
 
     private ObservableList<String> observableList = FXCollections.observableArrayList();
@@ -216,6 +216,7 @@ public class InvoiceController {
 
         if (alert.getResult() == ButtonType.YES) {
             try {
+                stopCamera();
                 FXMLLoader loader = new FXMLLoader(RobinHoodApplication.class.getResource("additionalCost-view.fxml"));
                 //using the previous stage give some UI errors
                 Stage stage = (Stage) totalBill.getScene().getWindow();
@@ -239,7 +240,23 @@ public class InvoiceController {
         }
 
     }
-
+    public void stopCamera(){
+        taskThread.interrupt();
+        taskThread.stop();
+        taskThread = null;
+        webcam.close();
+    }
+    @FXML
+    protected void onSwitchCameraButtonPressed(){
+        if(cameraOn){
+            stopCamera();
+        }
+        else{
+            startCamera();
+            startWebcamThread();
+        }
+        cameraOn = !cameraOn;
+    }
     @FXML
     protected void onTakePhotoButtonPressed(){
 //        webcam.open();
@@ -248,6 +265,7 @@ public class InvoiceController {
 //        webcam.open();
         if(taskThread != null) {
             taskThread.interrupt();
+
         }
         Dimension resolution = new Dimension(1920, 1080);// 1080p
 
@@ -347,7 +365,8 @@ public class InvoiceController {
         //Create Invoice in Database
         createInvoiceInDatabase();
         generateInvoicePDF();
-
+        stopCamera();
+        //TODO: print pdf
     }
     @FXML
     public void showRef(String s){
@@ -661,7 +680,7 @@ public class InvoiceController {
 //        FirebaseOptions options = new FirebaseOptions.Builder().setCredentials(credentials).build();
 //        FirebaseApp.initializeApp(options);
 
-        // TODO: Uncomment this (conserving api usage)
+        // Uncomment this (conserving api usage)
         setAvailableItems();
 
 // Done: remove static items and use database later
@@ -693,8 +712,6 @@ public class InvoiceController {
 
 //        Dimension resolution = new Dimension(1920, 1080);// 1080p
 
-        startCamera();
-        startWebcamThread();
 
     }
     void startCamera(){
