@@ -26,7 +26,7 @@ public class RobinHoodApplication extends Application {
         FirebaseApp.initializeApp(options);
         FirebaseDatabase.getInstance("https://robinhood-clinic-default-rtdb.firebaseio.com/").setPersistenceEnabled(true);
 
-        FXMLLoader fxmlLoader = new FXMLLoader(RobinHoodApplication.class.getResource("login-view.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(RobinHoodApplication.class.getResource("invoice-view.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 1920, 1080);
         stage.setTitle("RobinHood Clinic");
         //resize icon because that didn't work

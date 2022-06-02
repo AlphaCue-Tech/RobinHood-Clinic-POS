@@ -39,6 +39,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static java.lang.Thread.sleep;
+
 class CustomCell extends ListCell<String> {
     private Button actionBtn;
     private Label name ;
@@ -250,17 +252,24 @@ public class InvoiceController {
         if (webcam != null) {
             webcam.close();
         }
+        File file = new File("src/main/resources/com/example/robinhoodclinicpos/images/cameraOff.png");
+        Image image = new Image(file.toURI().toString());
+
+        webcamPhoto.setImage(image);
+
     }
     @FXML
     protected void onSwitchCameraButtonPressed(){
+
         if(cameraOn){
             stopCamera();
+            cameraOn = false;
         }
         else{
             startCamera();
             startWebcamThread();
+            cameraOn = true;
         }
-        cameraOn = !cameraOn;
     }
     @FXML
     protected void onTakePhotoButtonPressed(){
@@ -273,9 +282,7 @@ public class InvoiceController {
 
         }
         Dimension resolution = new Dimension(1920, 1080);// 1080p
-
-
-               BufferedImage image = webcam.getImage();
+       BufferedImage image = webcam.getImage();
 
         try {
             ImageIO.write(image, ImageUtils.FORMAT_JPG, new File("src/main/resources/com/example/robinhoodclinicpos/images/selfie.jpg"));
@@ -283,6 +290,7 @@ public class InvoiceController {
 //            Thread.sleep(2000);
             Image im = SwingFXUtils.toFXImage(image, null);
             webcamPhoto.setImage(im);
+            Thread.sleep(2000);
         } catch (Exception e) {
 
             System.out.println("Could not capture image");
@@ -712,7 +720,10 @@ public class InvoiceController {
         });
 
         System.out.println(itemListView);
+        File file = new File("src/main/resources/com/example/robinhoodclinicpos/images/cameraOff.png");
+        Image image = new Image(file.toURI().toString());
 
+        webcamPhoto.setImage(image);
         //        Dimension resolution = new Dimension(1280, 720); // HD 720p
 
 //        Dimension resolution = new Dimension(1920, 1080);// 1080p
@@ -741,7 +752,7 @@ public class InvoiceController {
                             }
                         });
                         try {
-                            Thread.sleep(300);
+                            sleep(300);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
