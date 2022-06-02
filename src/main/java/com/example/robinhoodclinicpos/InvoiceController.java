@@ -32,8 +32,7 @@ import javafx.util.Callback;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -195,6 +194,11 @@ public class InvoiceController {
     private String paymentMethod;
     Thread taskThread;
     Webcam webcam;
+
+    boolean notSynced = false;
+    public void setNotSynced(){
+        notSynced = true;
+    }
     public String getFullName(){
         return fullName;
     }
@@ -654,16 +658,71 @@ public class InvoiceController {
             System.out.println("Error searching");
         }
     }
+    public void changeLocalUserDB(List<QueryDocumentSnapshot> documents){
+        try {
+            FileWriter writer = new FileWriter("Offline DB/Items_DB.txt", false);
+            for(QueryDocumentSnapshot document: documents){
+                String name = document.getString("name");
+                Double cost = document.getDouble("cost");
+                String id = document.getId();
+                writer.write(name+"//"+cost+"//"+id);
+                writer.write("\r\n");
+            }
+            writer.close();
+            System.out.println("Set up offline DB");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+    public void checkOfflineDatabase(){
+        try {
+            FileReader reader = new FileReader("Offline DB/Items_DB.txt");
+            BufferedReader bufferedReader = new BufferedReader(reader);
+
+            String line;
+
+            while ((line = bufferedReader.readLine()) != null) {
+                System.out.println(line);
+                String name = line.split("//")[0];
+                String cost = line.split("//")[1];
+                String id = line.split("//")[2];
+                System.out.println(name);
+                System.out.println(cost);
+                System.out.println(id);
+                itemName.add(name);
+                itemCost.add(Double.parseDouble(cost));
+                itemID.add(id);
+            }
+            reader.close();
+            System.out.println("Checked all items in database");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Error in getting items from offline");
+        }
+    }
+
+    public void writeToUnsyncedLogin(String id, long t){
+        try {
+            FileWriter writer = new FileWriter("Offline DB/Unsynced_Login_Time.txt", true);
+            writer.write(id+" "+Long.toString(t));
+            writer.write("\r\n");   // write new line
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
     public void setAvailableItems(){
         Firestore db = FirestoreClient.getFirestore();
         // asynchronously retrieve all items
         ApiFuture<QuerySnapshot> query = db.collection("products").get();
-
         QuerySnapshot querySnapshot = null;
 
         try{
             querySnapshot = query.get();
             List<QueryDocumentSnapshot> documents = querySnapshot.getDocuments();
+            changeLocalUserDB(documents);
             for (QueryDocumentSnapshot document : documents) {
                 String name = document.getString("name");
                 Double cost = document.getDouble("cost");
@@ -673,7 +732,9 @@ public class InvoiceController {
                 itemID.add(document.getId());
             }
         }catch (Exception e){
-            System.out.println("Could not fetch documents");
+            System.out.println("Could not fetch documents from online database");
+            System.out.println("Checking Offline Database");
+            checkOfflineDatabase();
         }
     }
     public void initialize() throws IOException {
