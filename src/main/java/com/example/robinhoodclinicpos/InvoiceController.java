@@ -241,10 +241,15 @@ public class InvoiceController {
 
     }
     public void stopCamera(){
-        taskThread.interrupt();
-        taskThread.stop();
-        taskThread = null;
-        webcam.close();
+        cameraOn = false;
+        if (taskThread != null) {
+            taskThread.interrupt();
+            taskThread.stop();
+            taskThread = null;
+        }
+        if (webcam != null) {
+            webcam.close();
+        }
     }
     @FXML
     protected void onSwitchCameraButtonPressed(){

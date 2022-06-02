@@ -107,8 +107,8 @@ public class AdditionalCostController {
                         DocumentSnapshot customer = q1.get();
                         String uname = customer.getString("name");
                         String phone = customer.getString("phone");
-                        Double totalBill = customer.getDouble("totalBill");
-                        Double discount = customer.getDouble("discount");
+                        Double totalBill = document.getDouble("totalBill");
+                        Double discount = document.getDouble("discount");
                         System.out.println(uname);
                         System.out.println(phone);
                         System.out.println(totalBill);
@@ -144,16 +144,16 @@ public class AdditionalCostController {
 //            }
             //Get all invoices of today from database and generate pdf
             getInvoicesForToday();
-            //Generate summary PDF
+            //Generate summary PDF and Print it
             new DailySummaryPdfGenerator(usernameList, phoneNumberList, costList, additionalCostList, costDescriptionList);
-            //Print PDF
+
             Stage stage = (Stage) cost.getScene().getWindow();
             stage.close();
         }
     }
     public void initialize() {
         costDescriptionList = new ArrayList<String>();
-        costList = new ArrayList<Double>();
+        additionalCostList = new ArrayList<Double>();
     }
 
 }
