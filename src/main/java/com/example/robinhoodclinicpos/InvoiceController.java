@@ -3,10 +3,7 @@ package com.example.robinhoodclinicpos;
 import com.github.sarxos.webcam.Webcam;
 import com.github.sarxos.webcam.util.ImageUtils;
 import com.google.api.core.ApiFuture;
-import com.google.cloud.firestore.DocumentReference;
-import com.google.cloud.firestore.Firestore;
-import com.google.cloud.firestore.QueryDocumentSnapshot;
-import com.google.cloud.firestore.QuerySnapshot;
+import com.google.cloud.firestore.*;
 import com.google.firebase.cloud.FirestoreClient;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -33,6 +30,7 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -193,11 +191,13 @@ public class InvoiceController {
 
     private String paymentMethod;
     Thread taskThread;
+    Thread syncThread;
     Webcam webcam;
 
     boolean notSynced = false;
     public void setNotSynced(){
         notSynced = true;
+        startSyncThread();
     }
     public String getFullName(){
         return fullName;
@@ -703,9 +703,10 @@ public class InvoiceController {
         }
     }
 
-    public void writeToUnsyncedLogin(String id, long t){
+
+    public void createUnsyncedInvoice(String id, long t){
         try {
-            FileWriter writer = new FileWriter("Offline DB/Unsynced_Login_Time.txt", true);
+            FileWriter writer = new FileWriter("Offline DB/Unsynced_Invoice.txt", true);
             writer.write(id+" "+Long.toString(t));
             writer.write("\r\n");   // write new line
             writer.close();
@@ -788,8 +789,15 @@ public class InvoiceController {
         //        Dimension resolution = new Dimension(1280, 720); // HD 720p
 
 //        Dimension resolution = new Dimension(1920, 1080);// 1080p
-
-
+        File prevPhoto = new File("src/main/resources/com/example/robinhoodclinicpos/images/selfie.jpg");
+        deleteFile(prevPhoto);
+    }
+    public void deleteFile(File file){
+        try {
+            Files.deleteIfExists(file.toPath());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
     void startCamera(){
         Dimension resolution = new Dimension(480, 360);// 1080p
@@ -823,6 +831,131 @@ public class InvoiceController {
             });
         }
         taskThread.start();
+    }
+    boolean checkFileExists(String path){
+        File f = new File(path);
+        if (f.exists()){
+            return true;
+        }
+        return false;
+    }
+    boolean syncLogin(){
+        System.out.println("Syncing users Database");
+        FileReader reader = null;
+        try {
+            reader = new FileReader("Offline DB/Unsynced_Login_Time.txt");
+
+        BufferedReader bufferedReader = new BufferedReader(reader);
+
+        String line;
+
+        while ((line = bufferedReader.readLine()) != null) {
+            String userRef = line.split(" ")[0];
+            String loginTime = line.split(" ")[1];
+            Firestore db = FirestoreClient.getFirestore();
+            DocumentReference documentReference = db.collection("users").document(userRef);
+            System.out.println("Got the document reference");
+
+            System.out.println("*** Found the document. Updating the data ***");
+            ApiFuture<WriteResult> ft = documentReference.update("lastLogin", Long.parseLong(loginTime));
+            WriteResult result = ft.get();
+            System.out.println("Write result: " + result);
+            System.out.println("Successfully Updated the lastLogin");
+        }
+        reader.close();
+        return true;
+        } catch (Exception e) {
+            return false;
+        }
+
+    }
+    boolean syncCustomer(){
+        System.out.println("Syncing Customer Database");
+//        writer.write(fullName.getText()+"//"+phoneNumber.getText()+"//"+address.getText()+"//"+Long.toString(System.currentTimeMillis())+"//"+destPath);
+
+        FileReader reader = null;
+        try {
+            reader = new FileReader("Offline DB/Unsynced_Login_Time.txt");
+
+            BufferedReader bufferedReader = new BufferedReader(reader);
+
+            String line;
+
+            while ((line = bufferedReader.readLine()) != null) {
+                String fullName = line.split("//")[0];
+                String phoneNumber = line.split("//")[1];
+                String address = line.split("//")[2];
+                long registered = Long.parseLong(line.split("//")[3]);
+                String path = line.split("//")[4];
+
+                Firestore db = FirestoreClient.getFirestore();
+                //TODO: need to rethink the logic of saving customers offline
+                System.out.println("Successfully Updated the lastLogin");
+            }
+            reader.close();
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+
+    }
+    void syncDBFiles(){
+        System.out.println("Syncing all db files");
+        //check if any Unsynced files exist or not
+        if (checkFileExists("Offline DB/Unsynced_Login_Time.txt")){
+            //Sync the login time
+            if(syncLogin()){
+                System.out.println("Marked Unsynced_login_time.txt for deletion");
+                deleteFile(new File("Offline DB/Unsynced_Login_Time.txt"));
+
+            }
+            else{
+                return;
+            }
+        }
+        if (checkFileExists("Offline DB/Unsynced_Customer.txt")){
+            //Add the customer unconditionally for now
+            //TODO: check phone number first, then update/create based on it
+            if(syncCustomer()){
+                System.out.println("Marked Unsynced_Customer.txt for deletion");
+                deleteFile(new File("Offline DB/Unsynced_Customer.txt"));
+
+            }
+            else{
+                return;
+            }
+        }
+
+        syncThread.interrupt();
+        syncThread.stop();
+        syncThread = null;
+
+    }
+    void startSyncThread(){
+        if (syncThread == null) {
+            syncThread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    while (true) {
+
+                        Platform.runLater(new Runnable() {
+                            @Override
+                            public void run() {
+                                syncDBFiles();
+                            }
+                        });
+                        try {
+                            sleep(30000);
+                        } catch (InterruptedException e) {
+                            System.out.println("Could not sleep the syncThread");
+                            System.out.println("Exit");
+                        }
+
+                    }
+                }
+            });
+        }
+        syncThread.start();
     }
 
 }
