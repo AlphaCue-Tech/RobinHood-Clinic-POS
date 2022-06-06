@@ -4,7 +4,9 @@ import com.github.sarxos.webcam.Webcam;
 import com.github.sarxos.webcam.util.ImageUtils;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.*;
+import com.google.cloud.storage.Bucket;
 import com.google.firebase.cloud.FirestoreClient;
+import com.google.firebase.cloud.StorageClient;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -30,7 +32,11 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.net.URL;
+import java.net.URLConnection;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -190,6 +196,10 @@ public class InvoiceController {
     private String receptionistId;
 
     private String paymentMethod;
+
+    ArrayList<String> invoiceHelperPhoneNumber;
+    ArrayList<String> invoiceHelperCustomerRef;
+    Map<String, String> invoiceHelperRefPhone;
     Thread taskThread;
     Thread syncThread;
     Webcam webcam;
@@ -208,10 +218,13 @@ public class InvoiceController {
 
 //        while(true) {
 //            System.out.println("Taking an iamge for liveview");
-            BufferedImage image = webcam.getImage();
-            Image im = SwingFXUtils.toFXImage(image, null);
-            webcamPhoto.setImage(im);
-
+            try {
+                BufferedImage image = webcam.getImage();
+                Image im = SwingFXUtils.toFXImage(image, null);
+                webcamPhoto.setImage(im);
+            }
+            catch(Exception e){
+            }
     }
 
     @FXML
@@ -330,7 +343,11 @@ public class InvoiceController {
 //        }
     }
     public void createInvoiceInDatabase(){
+
         try{
+            if (!checkInternetConnection()){
+                throw new Exception();
+            }
             Map<String, Integer> items = new HashMap<String, Integer>();
             for(int i = 0; i<boughtItemIDList.size(); i++){
                 items.put(boughtItemIDList.get(i), boughtItemQuantityList.get(i));
@@ -357,8 +374,9 @@ public class InvoiceController {
 
             System.out.println(invoiceId);
         } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("Invoice wasn't created in database");
+            System.out.println("Invoice wasn't created in online Database");
+            System.out.println("Creating the offline database");
+            createUnsyncedInvoice();
             return;
         }
     }
@@ -704,10 +722,18 @@ public class InvoiceController {
     }
 
 
-    public void createUnsyncedInvoice(String id, long t){
+    public void createUnsyncedInvoice(){
         try {
             FileWriter writer = new FileWriter("Offline DB/Unsynced_Invoice.txt", true);
-            writer.write(id+" "+Long.toString(t));
+            writer.write(receptionistId+"//"+"0"+"//"+customerDocumentID+"//"+phoneNumber+"//"+totalBill.getText()+"//"+Long.toString(System.currentTimeMillis())+"//");
+            writer.write(Integer.toString(boughtItemIDList.size())+"//");
+            for(int i = 0; i<boughtItemIDList.size(); i++){
+                writer.write(boughtItemIDList.get(i)+"//"+boughtItemQuantityList.get(i)+"//");
+            }
+            writer.write(paymentMethod);
+            if (paymentMethod != "Cash"){
+                writer.write("//"+refField.getText());
+            }
             writer.write("\r\n");   // write new line
             writer.close();
         } catch (IOException e) {
@@ -715,13 +741,15 @@ public class InvoiceController {
         }
     }
     public void setAvailableItems(){
-        Firestore db = FirestoreClient.getFirestore();
-        // asynchronously retrieve all items
-        ApiFuture<QuerySnapshot> query = db.collection("products").get();
-        QuerySnapshot querySnapshot = null;
 
         try{
-            querySnapshot = query.get();
+            if(!checkInternetConnection()){
+                throw new Exception();
+            }
+            Firestore db = FirestoreClient.getFirestore();
+            // asynchronously retrieve all items
+            ApiFuture<QuerySnapshot> query = db.collection("products").get();
+            QuerySnapshot querySnapshot = query.get();
             List<QueryDocumentSnapshot> documents = querySnapshot.getDocuments();
             changeLocalUserDB(documents);
             for (QueryDocumentSnapshot document : documents) {
@@ -733,8 +761,8 @@ public class InvoiceController {
                 itemID.add(document.getId());
             }
         }catch (Exception e){
-            System.out.println("Could not fetch documents from online database");
-            System.out.println("Checking Offline Database");
+            System.out.println("Could not fetch items from online database");
+            System.out.println("Checking for items in Offline Database");
             checkOfflineDatabase();
         }
     }
@@ -749,6 +777,8 @@ public class InvoiceController {
         boughtItemIDList = new ArrayList<String>();
         boughtItemNameList = new ArrayList<String>();
         boughtItemQuantityList = new ArrayList<Integer>();
+        invoiceHelperRefPhone = new HashMap<String, String>();
+        syncCustomer();
 
 //        InputStream serviceAccount = new FileInputStream("robinhood-clinic-firebase-adminsdk-yzfpk-9aedc0fc60.json");
 //        GoogleCredentials credentials = GoogleCredentials.fromStream(serviceAccount);
@@ -791,6 +821,7 @@ public class InvoiceController {
 //        Dimension resolution = new Dimension(1920, 1080);// 1080p
         File prevPhoto = new File("src/main/resources/com/example/robinhoodclinicpos/images/selfie.jpg");
         deleteFile(prevPhoto);
+
     }
     public void deleteFile(File file){
         try {
@@ -854,13 +885,12 @@ public class InvoiceController {
             String loginTime = line.split(" ")[1];
             Firestore db = FirestoreClient.getFirestore();
             DocumentReference documentReference = db.collection("users").document(userRef);
-            System.out.println("Got the document reference");
 
             System.out.println("*** Found the document. Updating the data ***");
             ApiFuture<WriteResult> ft = documentReference.update("lastLogin", Long.parseLong(loginTime));
             WriteResult result = ft.get();
             System.out.println("Write result: " + result);
-            System.out.println("Successfully Updated the lastLogin");
+            System.out.println("Successfully Updated the login info");
         }
         reader.close();
         return true;
@@ -870,36 +900,190 @@ public class InvoiceController {
 
     }
     boolean syncCustomer(){
-        System.out.println("Syncing Customer Database");
-//        writer.write(fullName.getText()+"//"+phoneNumber.getText()+"//"+address.getText()+"//"+Long.toString(System.currentTimeMillis())+"//"+destPath);
-
+        System.out.println("Syncing Customers Database");
         FileReader reader = null;
+//        invoiceHelperPhoneNumber = new ArrayList<String>();
+//        invoiceHelperCustomerRef = new ArrayList<String>();
         try {
-            reader = new FileReader("Offline DB/Unsynced_Login_Time.txt");
+            reader = new FileReader("Offline DB/Unsynced_Customer.txt");
 
             BufferedReader bufferedReader = new BufferedReader(reader);
 
             String line;
+            Firestore db = FirestoreClient.getFirestore();
 
             while ((line = bufferedReader.readLine()) != null) {
-                String fullName = line.split("//")[0];
-                String phoneNumber = line.split("//")[1];
-                String address = line.split("//")[2];
-                long registered = Long.parseLong(line.split("//")[3]);
-                String path = line.split("//")[4];
+                if (line.equals("")) continue;
+                String customerName = line.split("//")[0];
+                String customerPhone = line.split("//")[1];
+                String customerAddress = line.split("//")[2];
+                Long registeredOn = Long.parseLong(line.split("//")[3]);
+                String customerPhotoPath = line.split("//")[4];
+                System.out.println(customerName);
+                System.out.println(customerPhone);
+                System.out.println(customerAddress);
+                System.out.println(registeredOn);
+                System.out.println(customerPhotoPath);
 
-                Firestore db = FirestoreClient.getFirestore();
-                //TODO: need to rethink the logic of saving customers offline
-                System.out.println("Successfully Updated the lastLogin");
+                //****************
+
+                String firebasePhotoPath = "CUSTOMER_PHOTOS_FOLDER/" + customerPhone + ".jpg";
+                String myPhotoPath = customerPhotoPath;
+                Map<String, Object> data = new HashMap<>();
+                data.put("name", customerName);
+                data.put("address", customerAddress);
+                data.put("phone", registeredOn);
+                data.put("registered", registeredOn);
+                data.put("photoPath", firebasePhotoPath);
+                ApiFuture<DocumentReference> ref = db.collection("customers").add(data);
+
+                //store the phonenumber and reference for further use
+//                invoiceHelperCustomerRef.add(ref.get().getId());
+//                invoiceHelperPhoneNumber.add(customerPhone);
+                invoiceHelperRefPhone.put(ref.get().getId(), customerPhone);
+                System.out.println("Testing 2");
+                StorageClient storageClient = StorageClient.getInstance();
+                InputStream photo = new FileInputStream(myPhotoPath);
+
+                storageClient.bucket().create(firebasePhotoPath, photo, Bucket.BlobWriteOption.userProject("robinhood-clinic"));
+                Path path = FileSystems.getDefault().getPath(myPhotoPath);
+                try {
+                    Files.delete(path);
+                } catch (Exception x) {
+                    System.out.println("Error Deleting the file");
+                }
+                System.out.println("Successfully added a customer to online DB");
+                System.out.println(ref.get().getId());
             }
             reader.close();
             return true;
         } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+    boolean syncInvoice(){
+        System.out.println("Syncing Invoice Database");
+
+        FileReader reader = null;
+        try {
+            reader = new FileReader("Offline DB/Unsynced_Invoice.txt");
+
+            BufferedReader bufferedReader = new BufferedReader(reader);
+
+            String line;
+//            writer.write(receptionistId+"//"+"0"+"//"+customerDocumentID+"//"+phoneNumber+"//"+totalBill.getText()+"//"+Long.toString(System.currentTimeMillis())+"//");
+//            writer.write(Integer.toString(boughtItemIDList.size())+"\\");
+//            for(int i = 0; i<boughtItemIDList.size(); i++){
+//                writer.write(boughtItemIDList.get(i)+"//"+boughtItemQuantityList.get(i)+"//");
+//            }
+//            writer.write(paymentMethod);
+//            if (paymentMethod != "Cash"){
+//                writer.write("//"+refField.getText());
+//            }
+            Firestore db = FirestoreClient.getFirestore();
+
+            while ((line = bufferedReader.readLine()) != null) {
+                for(String i: line.split("//")){
+                    System.out.println(i);
+                }
+                String receptionistId = line.split("//")[0];
+                double discount = Double.parseDouble(line.split("//")[1]);
+                String customerDocumentID = line.split("//")[2];
+                String phoneNumber = line.split("//")[3];
+                double total = Double.parseDouble(line.split("//")[4]);
+                long time = Long.parseLong(line.split("//")[5]);
+                int itemCount = Integer.parseInt(line.split("//")[6]);
+                if(invoiceHelperRefPhone.containsKey(phoneNumber)){
+                    //Customer is was saved while offline
+                    //So we don't need to search the database for reference again.
+                    customerDocumentID = invoiceHelperRefPhone.get(phoneNumber);
+                }else{
+                    //We will search for the reference in the database.
+                    //*******Find customer with phone number
+                    try {
+                        CollectionReference customers = db.collection("customers");
+
+                        Query query = customers.whereEqualTo("phone", phoneNumber);
+                        ApiFuture<QuerySnapshot> querySnapshot = query.get();
+                        for (DocumentSnapshot document : querySnapshot.get().getDocuments()) {
+                            customerDocumentID = document.getId();
+                            break;
+                        }
+
+                    } catch (Exception e) {
+//                        System.out.println(e);
+                        System.out.println("Error Retrieving old Customer!");
+                    }
+                    //**************************
+                }
+                //If for some ridiculous reason everything fails, we can still check push the invoice
+                //based on the phone number
+
+                System.out.println(receptionistId);
+                System.out.println(discount);
+                System.out.println(customerDocumentID);
+                System.out.println(phoneNumber);
+                System.out.println(total);
+                System.out.println(time);
+                System.out.println(itemCount);
+                Map<String, Integer> items = new HashMap<String, Integer>();
+                for(int i = 0; i<itemCount; i++){
+                    items.put(line.split("//")[2*i+7], Integer.parseInt(line.split("//")[2*i+7+1]));
+                    System.out.println(line.split("//")[2*i+7]);
+                    System.out.println(Integer.parseInt(line.split("//")[2*i+7+1]));
+                }
+                int currIndex = itemCount*2+7;
+                String pm = line.split("//")[currIndex];
+                System.out.println(pm);
+
+                Map<String, Object> data = new HashMap<>();
+                data.put("invoiceBy", db.collection("users").document(receptionistId));
+                data.put("discount", 0);
+                data.put("items", items);
+                data.put("customerId", db.collection("customers").document(customerDocumentID));
+                data.put("paymentMethod", pm);
+                if (pm != "Cash"){
+                    if(pm == "Other"){
+                        data.put("Other", line.split("//")[currIndex+1]);
+                    }
+                    else{
+                        data.put("paymentRef", line.split("//")[currIndex+1]);
+                    }
+                }
+                data.put("totalBill", total);
+                data.put("time", time);
+                ApiFuture<DocumentReference> ref = db.collection("invoices").add(data);
+                String invoiceId = ref.get().getId();
+                System.out.println("Successfully Added an invoice to online DB");
+                System.out.println(invoiceId);
+
+            }
+            reader.close();
+            return true;
+        } catch (Exception e) {
+            System.out.println("*********Error saving invoice ONLINE DB**********");
+            e.printStackTrace();
             return false;
         }
 
     }
+    boolean checkInternetConnection(){
+        try {
+            URL url = new URL("http://www.google.com");
+            URLConnection connection = url.openConnection();
+            connection.connect();
+            System.out.println("Internet is connected");
+            return true;
+        } catch (Exception e) {
+            System.out.println("Internet is not connected");
+            return false;
+        }
+    }
     void syncDBFiles(){
+        if(!checkInternetConnection()){
+           return;
+        }
         System.out.println("Syncing all db files");
         //check if any Unsynced files exist or not
         if (checkFileExists("Offline DB/Unsynced_Login_Time.txt")){
@@ -915,7 +1099,6 @@ public class InvoiceController {
         }
         if (checkFileExists("Offline DB/Unsynced_Customer.txt")){
             //Add the customer unconditionally for now
-            //TODO: check phone number first, then update/create based on it
             if(syncCustomer()){
                 System.out.println("Marked Unsynced_Customer.txt for deletion");
                 deleteFile(new File("Offline DB/Unsynced_Customer.txt"));
@@ -925,7 +1108,16 @@ public class InvoiceController {
                 return;
             }
         }
+        if (checkFileExists("Offline DB/Unsynced_Invoice.txt")){
+            //Add the customer unconditionally for now
+            if(syncInvoice()){                System.out.println("Marked Offline DB/Unsynced_Invoice.txt for deletion");
+                deleteFile(new File("Offline DB/Unsynced_Invoice.txt"));
 
+            }
+            else{
+                return;
+            }
+        }
         syncThread.interrupt();
         syncThread.stop();
         syncThread = null;
@@ -942,6 +1134,7 @@ public class InvoiceController {
                             @Override
                             public void run() {
                                 syncDBFiles();
+                                if (syncThread==null) return;
                             }
                         });
                         try {

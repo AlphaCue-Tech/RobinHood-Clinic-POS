@@ -11,6 +11,8 @@ import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 
 import java.io.*;
+import java.net.URL;
+import java.net.URLConnection;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -69,6 +71,18 @@ public class AddCustomerController {
             throw new RuntimeException(e);
         }
     }
+    boolean checkInternetConnection(){
+        try {
+            URL url = new URL("http://www.google.com");
+            URLConnection connection = url.openConnection();
+            connection.connect();
+            System.out.println("Internet is connected");
+            return true;
+        } catch (Exception e) {
+            System.out.println("Internet is not connected");
+            return false;
+        }
+    }
     public void createUnsyncedCustomer(){
         try {
             String srcPath = "src/main/resources/com/example/robinhoodclinicpos/images/selfie.jpg";
@@ -80,6 +94,7 @@ public class AddCustomerController {
             writer.write(fullName.getText()+"//"+phoneNumber.getText()+"//"+address.getText()+"//"+Long.toString(System.currentTimeMillis())+"//"+destPath);
             writer.write("\r\n");   // write new line
             writer.close();
+            documentId.setText(phoneNumber.getText());
             File prevPhoto = new File("src/main/resources/com/example/robinhoodclinicpos/images/selfie.jpg");
             deleteFile(prevPhoto);
             Stage stage = (Stage) fullName.getScene().getWindow();
@@ -92,7 +107,9 @@ public class AddCustomerController {
     protected void sendUserDataToInvoice(){
 
         try {
-
+            if(!checkInternetConnection()){
+                throw new Exception();
+            }
             Firestore db = FirestoreClient.getFirestore();
             String firebasePhotoPath = "CUSTOMER_PHOTOS_FOLDER/" + phoneNumber.getText() + ".jpg";
             String myPhotoPath = "src/main/resources/com/example/robinhoodclinicpos/images/selfie.jpg";

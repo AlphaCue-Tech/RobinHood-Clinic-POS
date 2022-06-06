@@ -16,6 +16,8 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -105,17 +107,32 @@ public class LoginController {
         }
 
     }
+    boolean checkInternetConnection(){
+        try {
+            URL url = new URL("http://www.google.com");
+            URLConnection connection = url.openConnection();
+            connection.connect();
+            System.out.println("Internet is connected");
+            return true;
+        } catch (Exception e) {
+            System.out.println("Internet is not connected");
+            return false;
+        }
+    }
     @FXML
     protected void onLoginButtonPressed() {
-        String user = username.getText();
-        String pass = password.getText();
-        System.out.println(user+" "+pass);
-        Firestore db = FirestoreClient.getFirestore();
-        ApiFuture<QuerySnapshot> query = db.collection("users").get();
-
-        QuerySnapshot querySnapshot = null;
         try {
-            querySnapshot = query.get();
+            if(!checkInternetConnection()){
+                throw new Exception();
+            }
+            String user = username.getText();
+            String pass = password.getText();
+            System.out.println(user+" "+pass);
+
+            Firestore db = FirestoreClient.getFirestore();
+            ApiFuture<QuerySnapshot> query = db.collection("users").get();
+
+            QuerySnapshot querySnapshot = query.get();
 
         List<QueryDocumentSnapshot> documents = querySnapshot.getDocuments();
         //Setting up the local db for users
@@ -159,7 +176,7 @@ public class LoginController {
             }
         }
         } catch (Exception e) {
-            System.out.println("Error fetching data");
+            System.out.println("Can't connect to online database");
             System.out.println("Checking the offline database");
             checkOfflineDatabase();
         }
