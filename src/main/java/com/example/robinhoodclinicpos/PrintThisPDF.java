@@ -1,29 +1,44 @@
 package com.example.robinhoodclinicpos;
 
 
-import javax.print.Doc;
-import javax.print.DocPrintJob;
-import javax.print.PrintService;
-import javax.print.SimpleDoc;
+import org.apache.pdfbox.io.IOUtils;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.printing.PDFPageable;
+
+import javax.print.*;
 import javax.print.attribute.HashPrintRequestAttributeSet;
 import java.awt.print.PrinterJob;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 
 public class PrintThisPDF {
-    PrintThisPDF(String fileLocation){
+    PrintThisPDF(String fileLocation, String PrinterName){
         try {
-            FileInputStream fis = new FileInputStream(fileLocation);
-            Doc pdfDoc = new SimpleDoc(fis, null, null);
+            PDDocument document = PDDocument.load(new File(fileLocation));
+
+            PrintService myPrintService = findPrintService(PrinterName); //HP LaserJet Pro M12a
+            System.out.println(myPrintService);
+
             PrinterJob job = PrinterJob.getPrinterJob();
-            PrintService printService = job.getPrintService();
-            DocPrintJob printJob = printService.createPrintJob();
-
-            printJob.print(pdfDoc, new HashPrintRequestAttributeSet());
-
-            fis.close();
+            job.setPageable(new PDFPageable(document));
+            job.setPrintService(myPrintService);
+            job.print();
         } catch (Exception e){
             e.printStackTrace();
             System.out.println("Printer Error. Could not print PDF");
         }
     }
+
+    private static PrintService findPrintService(String printerName) {
+        PrintService[] printServices = PrintServiceLookup.lookupPrintServices(null, null);
+        for (PrintService printService : printServices) {
+            System.out.println(printService.getName());
+            if (printService.getName().trim().equals(printerName)) {
+                return printService;
+            }
+        }
+        return null;
+    }
+
 }
