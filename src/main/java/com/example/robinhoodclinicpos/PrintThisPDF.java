@@ -13,11 +13,11 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 
 public class PrintThisPDF {
-    PrintThisPDF(String fileLocation, String PrinterName){
+    PrintThisPDF(String fileLocation){
         try {
             PDDocument document = PDDocument.load(new File(fileLocation));
 
-            PrintService myPrintService = findPrintService(PrinterName); //HP LaserJet Pro M12a
+            PrintService myPrintService = findPrintService(); //HP LaserJet Pro M12a
             System.out.println(myPrintService);
 
             PrinterJob job = PrinterJob.getPrinterJob();
@@ -30,11 +30,15 @@ public class PrintThisPDF {
         }
     }
 
-    private static PrintService findPrintService(String printerName) {
+    private static PrintService findPrintService() {
         PrintService[] printServices = PrintServiceLookup.lookupPrintServices(null, null);
         for (PrintService printService : printServices) {
             System.out.println(printService.getName());
-            if (printService.getName().trim().equals(printerName)) {
+            String name = printService.getName().toLowerCase();
+            /*if (printService.getName().trim().equals(printerName)) {
+                return printService;
+            }*/
+            if (name.contains("hp") || name.contains("canon") || name.contains("epson") || name.contains("samsung")) {
                 return printService;
             }
         }
