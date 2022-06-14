@@ -1,16 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.VBox?>
 
-
-<VBox alignment="CENTER" fillWidth="false" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" spacing="40.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.robinhoodclinicpos.AddCustomerController">
+<VBox alignment="CENTER" fillWidth="false" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" spacing="25.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.robinhoodclinicpos.AddCustomerController">
    <children>
       <TextField fx:id="documentId" visible="false" />
       <TextField fx:id="fullName" promptText="Full Name" />
       <TextField fx:id="phoneNumber" promptText="Phone Number" />
       <TextField fx:id="address" prefHeight="50.0" prefWidth="150.0" promptText="Address" />
-      <Button onAction="#sendUserDataToInvoice" mnemonicParsing="false" prefHeight="39.0" prefWidth="82.0" text="Done" />
+      <Label fx:id="statusLabel" alignment="CENTER" prefHeight="18.0" prefWidth="218.0" textAlignment="CENTER" />
+      <Button mnemonicParsing="false" onAction="#sendUserDataToInvoice" prefHeight="39.0" prefWidth="82.0" text="Done" />
    </children>
 </VBox>

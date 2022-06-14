@@ -268,8 +268,7 @@ public class DailySummaryPdfGenerator {
 //        footer.addCell(new Cell().add(new Paragraph("Come Join Us").setTextAlignment(TextAlignment.CENTER)).setBorderTop(new SolidBorder(ColorConstants.GRAY, 0.3f)).setVerticalAlignment(VerticalAlignment.BOTTOM));
 //        document.add(footer);
             document.close();
-            //TODO: Uncomment this
-//            new PrintThisPDF(pdfPath);
+            new PrintThisPDF(pdfPath);
 
         }catch(Exception e){
             e.printStackTrace();

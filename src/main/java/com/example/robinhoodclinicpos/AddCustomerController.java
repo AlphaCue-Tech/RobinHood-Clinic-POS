@@ -6,7 +6,9 @@ import com.google.cloud.firestore.Firestore;
 import com.google.cloud.storage.Bucket;
 import com.google.firebase.cloud.FirestoreClient;
 import com.google.firebase.cloud.StorageClient;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 
@@ -28,6 +30,8 @@ public class AddCustomerController {
     @FXML
     private TextField address;
 
+    @FXML
+    private Label statusLabel;
     @FXML
     private TextField documentId;
     public void setFullName(String s){
@@ -94,18 +98,28 @@ public class AddCustomerController {
             writer.write(fullName.getText()+"//"+phoneNumber.getText()+"//"+address.getText()+"//"+Long.toString(System.currentTimeMillis())+"//"+destPath);
             writer.write("\r\n");   // write new line
             writer.close();
-            documentId.setText(phoneNumber.getText());
+            String pn = phoneNumber.getText();
             File prevPhoto = new File("src/main/resources/com/example/robinhoodclinicpos/images/selfie.jpg");
             deleteFile(prevPhoto);
-            Stage stage = (Stage) fullName.getScene().getWindow();
-            stage.close();
+            Platform.runLater(new Runnable() {
+                @Override
+                public void run() {
+                    documentId.setText(phoneNumber.getText());
+                    Stage stage = (Stage) fullName.getScene().getWindow();
+                    stage.close();
+                }});
         } catch (Exception e) {
             System.out.println("Could Not Add customer in offline db");
+            Platform.runLater(new Runnable() {
+                @Override
+                public void run() {
+                    statusLabel.setText("Could not Add Customer");
+                    }
+                });
         }
     }
-    @FXML
-    protected void sendUserDataToInvoice(){
 
+    public void addCustomer(){
         try {
             if(!checkInternetConnection()){
                 throw new Exception();
@@ -122,8 +136,12 @@ public class AddCustomerController {
             data.put("registered", System.currentTimeMillis());
             data.put("photoPath", firebasePhotoPath);
             ApiFuture<DocumentReference> ref = db.collection("customers").add(data);
-
-            documentId.setText(ref.get().getId());
+            String myId = ref.get().getId();
+            Platform.runLater(new Runnable() {
+                @Override
+                public void run() {
+                    documentId.setText(myId);
+                }});
             StorageClient storageClient = StorageClient.getInstance();
             InputStream photo = new FileInputStream(myPhotoPath);
 
@@ -144,13 +162,34 @@ public class AddCustomerController {
 // result.get() blocks on response
 //            System.out.println("Update time : " + result.get().getUpdateTime());
             System.out.println(ref.get());
-            Stage stage = (Stage) fullName.getScene().getWindow();
-            stage.close();
+            Platform.runLater(new Runnable() {
+                @Override
+                public void run() {
+                    Stage stage = (Stage) fullName.getScene().getWindow();
+                    stage.close();
+                }});
         } catch (Exception e) {
             System.out.println(e);
             System.out.println("Error Adding new Customer!");
             System.out.println("Saving to offline DB");
             createUnsyncedCustomer();
         }
+    }
+
+    void startCustomerCreationThread() {
+        Thread setStatusThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                addCustomer();
+            }
+        });
+        setStatusThread.start();
+    }
+                @FXML
+    protected void sendUserDataToInvoice(){
+        statusLabel.setText("Adding Customer...");
+        startCustomerCreationThread();
+
+
     }
 }

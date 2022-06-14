@@ -761,6 +761,7 @@ public class InvoiceController {
                 itemID.add(document.getId());
             }
         }catch (Exception e){
+            e.printStackTrace();
             System.out.println("Could not fetch items from online database");
             System.out.println("Checking for items in Offline Database");
             checkOfflineDatabase();
