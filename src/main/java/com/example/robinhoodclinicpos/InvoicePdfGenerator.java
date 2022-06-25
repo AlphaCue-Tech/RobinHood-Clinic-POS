@@ -15,9 +15,13 @@ import com.itextpdf.layout.Document;
 import com.itextpdf.layout.borders.Border;
 import com.itextpdf.layout.borders.SolidBorder;
 import com.itextpdf.layout.element.*;
+import com.itextpdf.layout.element.Image;
 import com.itextpdf.layout.properties.HorizontalAlignment;
 import com.itextpdf.layout.properties.TextAlignment;
 
+import java.awt.*;
+import java.io.File;
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -219,6 +223,18 @@ public class InvoicePdfGenerator {
 //        footer.addCell(new Cell().add(new Paragraph("Come Join Us").setTextAlignment(TextAlignment.CENTER)).setBorderTop(new SolidBorder(ColorConstants.GRAY, 0.3f)).setVerticalAlignment(VerticalAlignment.BOTTOM));
 //        document.add(footer);
             document.close();
+
+            if (Desktop.isDesktopSupported()) {
+                try {
+                    File myFile = new File(pdfPath);
+                    Desktop.getDesktop().open(myFile);
+                } catch (IOException ex) {
+                    // no application registered for PDFs
+                }
+            }
+
+            wait(2000);
+
             new PrintThisPDF(pdfPath);
 
         }catch(Exception e){
@@ -227,5 +243,15 @@ public class InvoicePdfGenerator {
         }
 
     }
-
+    public static void wait(int ms)
+    {
+        try
+        {
+            Thread.sleep(ms);
+        }
+        catch(InterruptedException ex)
+        {
+            Thread.currentThread().interrupt();
+        }
+    }
 }
